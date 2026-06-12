@@ -163,6 +163,7 @@ Grouped; each component has states (default/hover/press/focus/disabled/loading/e
 | Surface | Stack | Phase | Key screens |
 |---|---|---|---|
 | **Member app** | Flutter | P1 | Onboarding+PAR-Q+, Today (hero), Log Workout, Log Food (search/barcode/photo/voice), Progress, AI Coach chat, Plans, Profile, Wearables, Membership/booking (P3) |
+| **Member web (individuals)** | TALL | P1.5/P2 | Responsive companion to the member app: Today, log workout/food, progress & charts, AI coach chat, plans, account/billing. Same API + design tokens. Larger-screen analytics & data entry; not all members are mobile-only. |
 | **Trainer app** | Flutter | P2 | Clients, Client detail (consent-gated), Program/Template builder, Check-ins (+AI draft review), Chat, Schedule, Analytics |
 | **Coach web** | TALL | P2 | Dashboard, clients, program builder, branding, billing, CRM, revenue |
 | **Gym owner/manager web** | TALL | P3 | Cross-branch dashboard, members, classes/calendar, staff, sales CRM, finance, churn/engagement |

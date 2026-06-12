@@ -237,7 +237,8 @@ Organized by domain. **MoSCoW within phase:** (M)ust / (S)hould / (C)ould. Forma
 ### 3.15 Apps & surfaces
 - `FR-APP-001` · Member/B2C Flutter app (workouts, nutrition, AI, progress, integrations) · P1 · M
 - `FR-APP-002` · Trainer Flutter app (clients, programs, check-ins, chat, analytics, schedule) · P2 · M
-- `FR-APP-003` · Web dashboards (user, coach, gym owner, manager, staff) · P2/P3 · M
+- `FR-APP-003` · Web dashboards — **member/individual (responsive companion to the mobile app)**, coach, gym owner, manager, staff · P1.5/P2/P3 · M
+- `FR-APP-003a` · **Member web app (TALL)**: Today, log workout/food, progress & charts, AI coach, plans, account/billing — same API + design tokens as the Flutter member app · P1.5/P2 · S
 - `FR-APP-004` · Filament super-admin dashboard · P1 · M
 - `FR-APP-005` · Gym staff app (check-in, member mgmt, payments) · P3 · S
 - `FR-APP-006` · Push notifications across apps · P1 · M

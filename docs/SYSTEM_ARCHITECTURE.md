@@ -32,7 +32,7 @@
 | Object storage | **S3-compatible** (region-pinned) | Media, progress photos (encrypted), exports. |
 | Real-time | **Laravel Reverb** (WebSockets) | Chat, live updates, occupancy; Soketi/Pusher as fallback. |
 | Async | **Queues + Horizon** | AI jobs, reports, notifications, sync, webhooks. |
-| Web | **TALL** (Tailwind, Alpine, Livewire) | Coach/gym/owner dashboards (P2/P3). |
+| Web | **TALL** (Tailwind, Alpine, Livewire) | Member/individual web (responsive companion) + coach & gym/owner dashboards. |
 | Admin | **Filament** | Super-admin (P1) + tenant back-offices. |
 | Mobile | **Flutter, Clean Architecture** | Member app (P1), Trainer app (P2), Staff app (P3). |
 | Local mobile DB | **Drift (SQLite)** or **Isar** | Offline-first store + outbox. |

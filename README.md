@@ -9,7 +9,7 @@
 ```
 apps/
   api/            Laravel modular monolith (backend)        ← Phase 0/1
-  web/            TALL dashboards (coach/gym)               ← P2/P3
+  web/            TALL dashboards (member/individual, coach, gym)  ← member web + operator consoles
   admin/          Filament super-admin                      ← P1
   mobile_member/  Flutter member app                        ← P1 (Flutter not yet provisioned)
   mobile_trainer/ Flutter trainer app                       ← P2
