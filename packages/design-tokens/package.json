@@ -1,0 +1,11 @@
+{
+  "name": "@fitness-os/design-tokens",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Source-of-truth design tokens (UI_UX_SYSTEM.md) → Tailwind, CSS, Flutter.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "files": ["tokens.json", "build.mjs", "dist"]
+}

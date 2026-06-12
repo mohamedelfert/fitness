@@ -1,0 +1,209 @@
+openapi: 3.1.0
+info:
+  title: Fitness OS API
+  version: 0.1.0
+  description: >
+    Contract derived from docs/API_SPECIFICATION.md. Phase 0/1 surface only.
+    Every mutation is idempotent (Idempotency-Key), authorized by the three-layer model
+    (RBAC × tenant × consent), and append-only logs are immutable.
+servers:
+  - url: https://api.fitnessos.com/v1
+    description: production
+  - url: http://localhost:8000/v1
+    description: local
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/register:
+    post:
+      summary: Create a Person + account (FR-IDN-001)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+      responses:
+        '201': { description: created, content: { application/json: { schema: { $ref: '#/components/schemas/AuthResponse' } } } }
+        '422': { $ref: '#/components/responses/Problem' }
+
+  /auth/login:
+    post:
+      summary: Email/password login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/AuthResponse' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /me:
+    get:
+      summary: Current Person profile
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/Person' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /exercises:
+    get:
+      summary: Exercise library (search/filter, localized)
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, default: 25 } }
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/ExerciseList' } } } }
+
+  /sessions:
+    post:
+      summary: Start a training Session (idempotent)
+      parameters: [ { $ref: '#/components/parameters/IdempotencyKey' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SessionCreate' }
+      responses:
+        '201': { description: created, content: { application/json: { schema: { $ref: '#/components/schemas/Session' } } } }
+        '409': { $ref: '#/components/responses/Problem' }
+
+  /sessions/{sessionId}/sets:
+    post:
+      summary: Append an immutable SetLog (offline-synced, idempotent) — FR-TRN-002
+      parameters:
+        - { name: sessionId, in: path, required: true, schema: { type: string } }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SetLogCreate' }
+      responses:
+        '201': { description: created, content: { application/json: { schema: { $ref: '#/components/schemas/SetLog' } } } }
+        '200': { description: idempotent replay (returns original), content: { application/json: { schema: { $ref: '#/components/schemas/SetLog' } } } }
+
+  /me/history:
+    get:
+      summary: Session history (cursor-paginated)
+      parameters:
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, default: 25 } }
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/SessionList' } } } }
+
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer }
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: Client-generated ULID; replays return the original result.
+      schema: { type: string }
+  responses:
+    Problem:
+      description: RFC-9457 problem+json
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    Ulid: { type: string, pattern: '^[0-9A-HJKMNP-TV-Z]{26}$' }
+    Problem:
+      type: object
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        code: { type: string }
+        detail: { type: string }
+        request_id: { type: string }
+    RegisterRequest:
+      type: object
+      required: [display_name, email, password]
+      properties:
+        display_name: { type: string }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8 }
+        locale: { type: string, enum: [en, ar], default: en }
+        unit_system: { type: string, enum: [metric, imperial], default: metric }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+    AuthResponse:
+      type: object
+      properties:
+        token: { type: string }
+        person: { $ref: '#/components/schemas/Person' }
+    Person:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/Ulid' }
+        display_name: { type: string }
+        email: { type: string }
+        locale: { type: string }
+        unit_system: { type: string }
+        health_screen_status: { type: string, enum: [none, passed, flagged] }
+    Exercise:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/Ulid' }
+        name: { type: string }
+        primary_muscles: { type: array, items: { type: string } }
+        equipment: { type: array, items: { type: string } }
+    ExerciseList:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Exercise' } }
+        meta: { $ref: '#/components/schemas/CursorMeta' }
+    SessionCreate:
+      type: object
+      properties:
+        workout_id: { $ref: '#/components/schemas/Ulid' }
+        started_at: { type: string, format: date-time }
+    Session:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/Ulid' }
+        person_id: { $ref: '#/components/schemas/Ulid' }
+        started_at: { type: string, format: date-time }
+        ended_at: { type: string, format: date-time, nullable: true }
+        set_logs: { type: array, items: { $ref: '#/components/schemas/SetLog' } }
+    SessionList:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Session' } }
+        meta: { $ref: '#/components/schemas/CursorMeta' }
+    SetLogCreate:
+      type: object
+      required: [exercise_id, set_index, reps]
+      properties:
+        client_ulid: { $ref: '#/components/schemas/Ulid' }
+        exercise_id: { $ref: '#/components/schemas/Ulid' }
+        set_index: { type: integer, minimum: 1 }
+        reps: { type: integer, minimum: 0 }
+        load: { type: number, minimum: 0 }
+        rpe: { type: number, minimum: 0, maximum: 10 }
+        logged_at: { type: string, format: date-time }
+    SetLog:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/Ulid' }
+        session_id: { $ref: '#/components/schemas/Ulid' }
+        exercise_id: { $ref: '#/components/schemas/Ulid' }
+        set_index: { type: integer }
+        reps: { type: integer }
+        load: { type: number }
+        rpe: { type: number }
+        logged_at: { type: string, format: date-time }
+    CursorMeta:
+      type: object
+      properties:
+        next_cursor: { type: string, nullable: true }
