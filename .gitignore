@@ -6,6 +6,7 @@
 **/.env
 **/.env.*
 !**/.env.example
+!**/.env.docker
 
 # Laravel
 apps/api/storage/*.key

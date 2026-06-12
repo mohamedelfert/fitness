@@ -50,9 +50,16 @@ vendor/bin/phpunit                 # 12 tests, 3 skipped on host (Filament needs
 vendor/bin/pint --test             # style gate (must pass)
 php artisan migrate:fresh          # dev DB = fitness_os (MariaDB root/root)
 php artisan route:list --path=v1   # see the slice + health routes
-# Full app incl. Filament rendering:  docker compose up   (from repo root)
-#   then seed admin: docker compose exec api php artisan db:seed --class="Database\Seeders\PlatformAdminSeeder"
+# Full app incl. Filament rendering (verified working):
+docker compose up -d                 # api on :8000, mysql :3310, redis :6380, meili :7700, mailpit :8025
+docker compose exec api php artisan db:seed --class="Database\Seeders\PlatformAdminSeeder"
+#   → http://localhost:8000/v1/health  → {"status":"ok",...}
+#   → http://localhost:8000/admin      → login admin@fitnessos.test / password
 ```
+
+**Docker notes (debugged & fixed 2026-06-13):**
+- Host ports are **env-overridable** (`MYSQL_PORT`, `REDIS_PORT`, `API_PORT`, ...) — defaults dodge the other projects' containers on this machine (which hold 3306/3307/3308). Override in a root `.env` if one clashes.
+- The container reads **`apps/api/.env.docker`** (mounted over `/app/.env`), NOT the host `.env`. Reason: `php artisan serve` forwards only `.env`-file vars to its request child, so container `environment:` vars were invisible to served requests (DB/redis showed "down"). Edit `.env.docker` for container config; host `.env` stays for host-CLI dev.
 
 ## 6. What's NEXT (pick up here)
 **Immediate Phase-0 leftovers:** social OAuth (Apple/Google) on `Person`.
