@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\RequestId;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,7 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Correlate every API request with a request id (NFR-OPS-001).
+        $middleware->api(prepend: [RequestId::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

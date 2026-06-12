@@ -55,7 +55,7 @@
 
 ## 4. Build status by phase (no code yet — all ⬜)
 
-### Phase 0 — Foundation / walking skeleton  🟡 in progress
+### Phase 0 — Foundation / walking skeleton  ✅ substantially complete (social OAuth + AI spike remain)
 | Item | Status | Notes |
 |---|---|---|
 | Monorepo skeleton + docs/ + git init | ✅ | `apps/ packages/ infra/ docs/ tools/` |
@@ -66,7 +66,8 @@
 | Core: ULID ✅ · Tenancy/Consent/Audit/Ledger | 🟡 | **dormant — deferred to P2** (no tenants in B2C P1) |
 | **Vertical slice: offline log → sync → display** | ✅ | **TDD: 4 tests / 17 assertions green** — append-only + idempotent replay + cross-person isolation + auth, verified end-to-end |
 | CI (GitHub Actions) + Docker dev stack | ✅ | `.github/workflows/ci.yml` runs Pint + PHPUnit on **MySQL 8**; compose: MySQL 8 + Redis + Meilisearch + Mailpit |
-| IaC (Terraform) + observability baseline | ⬜ | next |
+| Observability baseline | ✅ | request-id middleware (X-Request-Id + log Context), `/v1/health` probe (DB required, Redis best-effort), JSON log channel (NFR-OPS-001) |
+| IaC (Terraform) baseline | ✅ | region-pinned AWS skeleton (encrypted S3 media + ECR); full stack (VPC/RDS/Redis/compute/WAF) deferred to account confirmation |
 | Filament super-admin shell | ✅ | Filament v5 panel at `/admin`; dedicated `admin` guard (`PlatformUser`, separate from Persons); `PersonResource`; rendering needs ext-intl (Docker/CI) |
 | AI Brain spike | ⬜ | planned — `docs/AI_BRAIN_SPIKE.md` |
 
