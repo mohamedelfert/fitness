@@ -67,7 +67,7 @@
 | **Vertical slice: offline log → sync → display** | ✅ | **TDD: 4 tests / 17 assertions green** — append-only + idempotent replay + cross-person isolation + auth, verified end-to-end |
 | CI (GitHub Actions) + Docker dev stack | ✅ | `.github/workflows/ci.yml` runs Pint + PHPUnit on **MySQL 8**; compose: MySQL 8 + Redis + Meilisearch + Mailpit |
 | IaC (Terraform) + observability baseline | ⬜ | next |
-| Filament super-admin shell | ⬜ | next (`composer require filament`) |
+| Filament super-admin shell | ✅ | Filament v5 panel at `/admin`; dedicated `admin` guard (`PlatformUser`, separate from Persons); `PersonResource`; rendering needs ext-intl (Docker/CI) |
 | AI Brain spike | ⬜ | planned — `docs/AI_BRAIN_SPIKE.md` |
 
 **Build-env notes (this machine):** PHP **8.2** (brief: 8.3+); **MariaDB 10.11** local (prod: MySQL 8 — `utf8mb4_0900_ai_ci` is MySQL-only); **no `pdo_sqlite`** so tests run on MariaDB `fitness_os_test`; **Flutter absent** → mobile deferred; Composer uses slow git-source path (no GitHub token).

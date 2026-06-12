@@ -16,6 +16,11 @@ apps/api/storage/logs/*
 apps/api/bootstrap/cache/*
 apps/api/public/storage
 
+# Filament-published vendor assets (regenerated via `php artisan filament:assets`)
+apps/api/public/css/filament/
+apps/api/public/js/filament/
+apps/api/public/fonts/filament/
+
 # Build artifacts
 **/dist/
 **/build/
