@@ -25,6 +25,16 @@ class ModuleServiceProvider extends ServiceProvider
 
             return 'Database\\Factories\\'.class_basename($modelName).'Factory';
         });
+
+        // Auto-register each module's own service provider (gates, policies, bindings):
+        // modules/<X>/Providers/<X>ServiceProvider.php => Modules\<X>\Providers\<X>ServiceProvider
+        $base = base_path('modules/');
+        foreach (glob($base.'*/Providers/*ServiceProvider.php') ?: [] as $file) {
+            $class = 'Modules\\'.str_replace(['/', '.php'], ['\\', ''], substr($file, strlen($base)));
+            if (class_exists($class)) {
+                $this->app->register($class);
+            }
+        }
     }
 
     public function boot(): void

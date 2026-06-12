@@ -76,7 +76,7 @@
 ### Phase 1 — B2C + AI MVP (FR-level)
 | FR group | Feature | Status |
 |---|---|---|
-| FR-IDN, FR-AI-007 | Onboarding + PAR-Q+ health screen | ⬜ |
+| FR-IDN, FR-AI-007 | Onboarding + PAR-Q+ health screen | 🟡 **PAR-Q+ screen + AI safety gate ✅** (TDD, 6 tests/19 assertions; `ai-plan.generate` gate requires `passed`). Broader profile onboarding (goals/equipment/injuries) next. |
 | FR-TRN-* | Exercise library + training log (offline, timers, history, PRs) | ⬜ |
 | FR-NUT-001/002/003/006 | Food DB + nutrition log (search/barcode/macros/water) | ⬜ |
 | FR-AI-001/002 + NFR-AI | AI Brain core (gen + safety gate + RAG + credit meter + gateway) | ⬜ |

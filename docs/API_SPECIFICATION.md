@@ -60,7 +60,9 @@
 | POST | `/v1/auth/social` | Apple/Google OAuth exchange | P1 |
 | POST | `/v1/auth/refresh` · `/logout` | Token lifecycle | P1 |
 | GET/PATCH | `/v1/me` | Person profile (locale, units, tz) | P1 |
-| POST | `/v1/me/health-screen` | Submit PAR-Q+ (FR-AI-007 gate) | P1 |
+| GET | `/v1/health-screen/questions` | PAR-Q+ questionnaire (7 questions) to render | P1 |
+| POST | `/v1/me/health-screen` | Submit PAR-Q+ → passed/flagged; sets the AI-plan gate (FR-AI-007) | P1 |
+| GET | `/v1/me/health-screen` | Current screen status + latest screening | P1 |
 | GET | `/v1/me/export` | Full data export (FR-IDN-004) | P1 |
 | DELETE | `/v1/me` | Account deletion (cascades + revokes consent) | P1 |
 | GET/POST/DELETE | `/v1/me/consents` | List/grant/revoke consent scopes (FR-IDN-003) | P2 |
