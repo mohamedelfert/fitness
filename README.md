@@ -2,7 +2,9 @@
 
 > The operating system for the entire fitness value chain — individuals, coaches, and gyms — connected by one user-owned identity, one data graph, and one AI brain.
 
-**Status:** Phase 0 (foundation / walking skeleton). Design phase complete; implementation beginning per [`docs/EXECUTION_PLAN.md`](docs/EXECUTION_PLAN.md).
+**Status:** Phase 0 substantially complete (foundation / walking skeleton). Implementation per [`docs/EXECUTION_PLAN.md`](docs/EXECUTION_PLAN.md).
+
+> 👉 **Resuming work? Read [`docs/SESSION_HANDOFF.md`](docs/SESSION_HANDOFF.md) first** — current status, environment gotchas, how to run, and exactly what's next.
 
 ## Repository layout (monorepo)
 
