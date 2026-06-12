@@ -3,6 +3,7 @@
 namespace Tests\Feature\Training;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 use Modules\Identity\Models\Person;
 use Modules\Training\Models\Exercise;
@@ -54,7 +55,7 @@ class SetLoggingTest extends TestCase
         $session = $this->postJson('/v1/sessions', [])->assertCreated()->json('data');
 
         $payload = [
-            'client_ulid' => (string) \Illuminate\Support\Str::ulid(),
+            'client_ulid' => (string) Str::ulid(),
             'exercise_id' => $exercise->id,
             'set_index' => 1,
             'reps' => 8,

@@ -65,7 +65,8 @@
 | `Person` identity (ULID) + Sanctum auth | 🟡 | done; **social OAuth** not yet |
 | Core: ULID ✅ · Tenancy/Consent/Audit/Ledger | 🟡 | **dormant — deferred to P2** (no tenants in B2C P1) |
 | **Vertical slice: offline log → sync → display** | ✅ | **TDD: 4 tests / 17 assertions green** — append-only + idempotent replay + cross-person isolation + auth, verified end-to-end |
-| CI/CD + Docker + IaC + observability | ⬜ | next |
+| CI (GitHub Actions) + Docker dev stack | ✅ | `.github/workflows/ci.yml` runs Pint + PHPUnit on **MySQL 8**; compose: MySQL 8 + Redis + Meilisearch + Mailpit |
+| IaC (Terraform) + observability baseline | ⬜ | next |
 | Filament super-admin shell | ⬜ | next (`composer require filament`) |
 | AI Brain spike | ⬜ | planned — `docs/AI_BRAIN_SPIKE.md` |
 

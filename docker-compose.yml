@@ -1,0 +1,99 @@
+name: fitness-os
+
+# Local dev stack. Real MySQL 8 (prod parity — local host MariaDB is only a fallback).
+# Host ports are offset (3307/6380) to avoid clashing with services already on the host.
+services:
+  api:
+    build:
+      context: ./infra/docker/php
+    working_dir: /app
+    volumes:
+      - ./apps/api:/app
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: local
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_DATABASE: fitness_os
+      DB_USERNAME: fitness
+      DB_PASSWORD: secret
+      REDIS_HOST: redis
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+      SESSION_DRIVER: file
+      MAIL_HOST: mailpit
+      MAIL_PORT: "1025"
+      SCOUT_DRIVER: meilisearch
+      MEILISEARCH_HOST: http://meilisearch:7700
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: sh -c "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
+
+  queue:
+    build:
+      context: ./infra/docker/php
+    working_dir: /app
+    volumes:
+      - ./apps/api:/app
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_DATABASE: fitness_os
+      DB_USERNAME: fitness
+      DB_PASSWORD: secret
+      REDIS_HOST: redis
+      QUEUE_CONNECTION: redis
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: php artisan queue:work --tries=3
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: fitness_os
+      MYSQL_USER: fitness
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.10
+    environment:
+      MEILI_ENV: development
+      MEILI_MASTER_KEY: masterKey
+    ports:
+      - "7700:7700"
+    volumes:
+      - meili-data:/meili_data
+
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "8025:8025"   # web UI
+      - "1025:1025"   # SMTP
+
+volumes:
+  mysql-data:
+  meili-data:
