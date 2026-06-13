@@ -62,15 +62,16 @@ docker compose exec api php artisan db:seed --class="Database\Seeders\PlatformAd
 - The container reads **`apps/api/.env.docker`** (mounted over `/app/.env`), NOT the host `.env`. Reason: `php artisan serve` forwards only `.env`-file vars to its request child, so container `environment:` vars were invisible to served requests (DB/redis showed "down"). Edit `.env.docker` for container config; host `.env` stays for host-CLI dev.
 
 ## 6. What's NEXT (pick up here)
-**Done since last handoff (on `main`):** **full deep `docs/PHASE_PLAN.md`** (all phases task-level; P4 planning-time) · **Onboarding profile capture + goals** (`FR-IDN`, `FR-ENG-001`) — new **Engagement** module (`goals`), `GET/PATCH /v1/me`, `POST /v1/onboarding`, `GET/POST /v1/goals`, `AiInputProfile` Brain contract (TDD, 14 tests). Suite now **33 tests / 101 assertions** (3 Filament skips on host).
+**Done since last handoff (on `main`):** **full deep `docs/PHASE_PLAN.md`** (all phases task-level; P4 planning-time) · **Onboarding profile capture + goals** (`FR-IDN`, `FR-ENG-001`) — new **Engagement** module (`goals`), `GET/PATCH /v1/me`, `POST /v1/onboarding`, `GET/POST /v1/goals`, `AiInputProfile` Brain contract · **Exercise library + search** (`FR-TRN-001/006`) — `GET /v1/exercises` (q/muscle/equipment, cursor, `Accept-Language`) + `GET /v1/exercises/{id}`, `exercises` enriched to spec, `Exercise::scopeSearch` (swap for Meili in prod), bilingual `ExerciseLibrarySeeder`. Suite now **43 tests / 135 assertions** (3 Filament skips on host).
 **Immediate Phase-0 leftover:** social OAuth (Apple/Google) on `Person` (`FR-IDN-001`) — slots anytime.
-**Phase 1 — recommended next (per PHASE_PLAN intra-phase order):** E1.3 **exercise library + training-log polish** (timers/PRs) → E1.4 **nutrition/food log** → then **E1.6 AI Brain** (gen + safety gate + RAG + credit metering) once Q5/Q7 land. `AiInputProfile.ready_for_ai` already signals J1 readiness; E1.6 must still call the `ai-plan.generate` Gate (screen-passed) for enforcement.
+**Phase 1 — recommended next (per PHASE_PLAN intra-phase order):** finish **E1.3** — program model/builder (`programs→workouts→workout_exercises`, `FR-TRN-005`) + logging polish (timers `FR-TRN-003`, PR auto-detection read-model `FR-TRN-004`) → **E1.4 nutrition/food log** → **E1.6 AI Brain** once Q5/Q7 land. `AiInputProfile.ready_for_ai` signals J1 readiness; E1.6 must still call the `ai-plan.generate` Gate (screen-passed) for enforcement.
 **AI Brain spike** (`docs/AI_BRAIN_SPIKE.md`) is the highest-risk item — **blocked on**:
 - **Q5** — AI provider API key (default plan: Claude-primary + fallback gateway).
 - **Q7** — clinical contraindication ruleset source (for the safety post-eval).
 
 ## 7. Open questions (from IMPLEMENTATION_PROGRESS §3)
 Q1 confirm A3/A4/A5 defaults · Q2 pricing · Q3 MENA PSP (Paymob/HyperPay/Tap) · Q4 food-DB & exercise-media licensing (Arabic) · Q5 AI provider key · Q6 `stancl/tenancy` spike · Q7 contraindication ruleset.
+**Q8 (new) — localized exercise-name search.** `exercises.name` is canonical per DB design (only instructions are localized), so Arabic *name* search currently returns nothing (search doesn't error — it's robust). MENA-first may want Arabic-name matching → deliberate decision: add `name_i18n` (+ extend search) vs rely on localized instructions. Raise before the member app's library UX lands. Tie-in with Q4 (Arabic media/licensing).
 
 ## 8. Workflow reminders
 - Work follows the docs; keep `GLOSSARY.md` the source of truth for entity names (prevents cross-doc drift).

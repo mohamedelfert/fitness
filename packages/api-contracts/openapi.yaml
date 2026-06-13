@@ -92,13 +92,26 @@ paths:
 
   /exercises:
     get:
-      summary: Exercise library (search/filter, localized)
+      summary: Exercise library (search/filter, localized via Accept-Language) — FR-TRN-001/006
       parameters:
-        - { name: q, in: query, schema: { type: string } }
+        - { name: q, in: query, description: name substring match, schema: { type: string } }
+        - { name: muscle, in: query, description: filter by primary/secondary muscle, schema: { type: string } }
+        - { name: equipment, in: query, description: filter by equipment, schema: { type: string } }
         - { name: cursor, in: query, schema: { type: string } }
-        - { name: limit, in: query, schema: { type: integer, default: 25 } }
+        - { name: limit, in: query, schema: { type: integer, default: 25, maximum: 100 } }
       responses:
         '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/ExerciseList' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /exercises/{exerciseId}:
+    get:
+      summary: A single exercise (localized instructions, media, contraindications)
+      parameters:
+        - { name: exerciseId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/ExerciseEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
 
   /sessions:
     post:
@@ -288,9 +301,19 @@ components:
       type: object
       properties:
         id: { $ref: '#/components/schemas/Ulid' }
-        name: { type: string }
+        name: { type: string, description: canonical name (localized instructions, not name) }
+        slug: { type: string }
         primary_muscles: { type: array, items: { type: string } }
+        secondary_muscles: { type: array, items: { type: string } }
         equipment: { type: array, items: { type: string } }
+        mechanics: { type: string, enum: [compound, isolation], nullable: true }
+        instructions: { type: string, nullable: true, description: resolved to the request locale (Accept-Language), en fallback }
+        media_keys: { type: array, items: { type: string }, description: signed-asset keys (FR-TRN-006) }
+        contraindications: { type: array, items: { type: string }, description: powers the AI safety gate (FR-AI-007) }
+    ExerciseEnvelope:
+      type: object
+      properties:
+        data: { $ref: '#/components/schemas/Exercise' }
     ExerciseList:
       type: object
       properties:

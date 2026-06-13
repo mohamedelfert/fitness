@@ -77,7 +77,8 @@
 | FR group | Feature | Status |
 |---|---|---|
 | FR-IDN, FR-AI-007, FR-ENG-001 | Onboarding + PAR-Q+ health screen | 🟡 **PAR-Q+ screen + AI safety gate ✅** (6 tests). **Onboarding profile capture ✅** (TDD, 14 tests/51 assertions): `GET/PATCH /v1/me`, `POST /v1/onboarding`, `GET/POST /v1/goals` (new Engagement module + `goals` table); training profile (experience/equipment/schedule/diet/injuries) in `onboarding_state.profile`; `AiInputProfile` assembles the Brain contract incl. injuries + screen status. Social OAuth + first-plan handoff (needs E1.6) remain. |
-| FR-TRN-* | Exercise library + training log (offline, timers, history, PRs) | ⬜ |
+| FR-TRN-001/006 | Exercise library + search | 🟡 **Browse/search API ✅** (TDD, 10 tests): `GET /v1/exercises` (q + muscle/equipment filters, cursor, Accept-Language localized) + `GET /v1/exercises/{id}`; `exercises` enriched to spec (secondary_muscles/mechanics/media_keys); DB-backed search (Meili = prod path); bilingual dev seeder w/ contraindications. **Program builder + timers/PR-detection still ⬜.** |
+| FR-TRN-002/003/004/005 | Training log polish (timers, history, PRs, program builder) | ⬜ (SetLog append/idempotent ✅ from P0) |
 | FR-NUT-001/002/003/006 | Food DB + nutrition log (search/barcode/macros/water) | ⬜ |
 | FR-AI-001/002 + NFR-AI | AI Brain core (gen + safety gate + RAG + credit meter + gateway) | ⬜ |
 | FR-ENG-006, J2 | Today screen + smart notifications | ⬜ |

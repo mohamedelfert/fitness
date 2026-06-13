@@ -16,10 +16,13 @@ class ExerciseFactory extends Factory
 
         return [
             'name' => $name,
-            'slug' => Str::slug($name),
+            'slug' => Str::slug($name).'-'.Str::lower(Str::random(4)),
             'primary_muscles' => ['chest'],
+            'secondary_muscles' => ['triceps'],
             'equipment' => ['barbell'],
+            'mechanics' => 'compound',
             'instructions' => ['en' => 'Perform with control.'],
+            'media_keys' => [],
             'contraindications' => [],
         ];
     }

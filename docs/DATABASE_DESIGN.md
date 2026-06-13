@@ -80,7 +80,7 @@
 
 ### 2.3 Shared assets (P1)
 
-**`exercises` [A]** — global library. `(name, slug, primary_muscles json, secondary_muscles json, equipment json, mechanics, media_keys json, instructions_i18n json, contraindications json)`. **`contraindications` powers the AI safety gate.** FK target for `workout_exercises`, `set_logs`.
+**`exercises` [A]** — global library. `(name, slug, primary_muscles json, secondary_muscles json, equipment json, mechanics, instructions json {locale→value}, media_keys json, contraindications json)`. **`contraindications` powers the AI safety gate.** FK target for `workout_exercises`, `set_logs`. *(Implemented P1: `name` is canonical; instructions are the localized map — exercise names are not yet localized, see open question on Arabic-name search.)*
 
 **`food_items` [A]** — licensed/aggregated DB. `(source, external_ref, name_i18n, brand, barcode, serving_units json, kcal, macros, micros json, region)`. Indexed by `barcode`, full-text/Meili by `name`. Localized (A2). Large table; read-optimized + cached.
 

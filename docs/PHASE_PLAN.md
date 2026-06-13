@@ -53,9 +53,9 @@ Cross-cutting workstreams run **every** phase (see `EXECUTION_PLAN.md §9` and t
 - Social OAuth (Apple/Google) `FR-IDN-001` · GDPR export (`/v1/me/export`) + account deletion (`FR-IDN-004`) · profile/account management · push-token registration (`FR-APP-006`).
 
 ### E1.3 — Training  🟡
-- Exercise library: **license/seed** dataset + media (`FR-TRN-001/006`, MASTER §12); search (Meilisearch, RTL-aware). 
-- Program model & builder: `programs → workouts → workout_exercises` (`FR-TRN-005`) — schema exists in DB doc, implement.
-- Logging polish: rest/interval/EMOM/AMRAP **timers** (`FR-TRN-003`); **PR auto-detection** read-model (`FR-TRN-004`); session history filters.
+- **Exercise library + search** ✅ (`FR-TRN-001/006`) — TDD, 10 tests: `GET /v1/exercises` (q + muscle/equipment filters, cursor, `Accept-Language` localized) + `GET /v1/exercises/{id}`; `exercises` enriched to the DB-design spec (`secondary_muscles`, `mechanics`, `media_keys`); `Exercise::scopeSearch` DB-backed (one method to swap for **Meilisearch** in prod); bilingual dev seeder with contraindications (full licensed dataset = Q4). *Names are canonical (not localized) — Arabic-name search is a deliberate open follow-up, not invented here.*
+- Program model & builder: `programs → workouts → workout_exercises` (`FR-TRN-005`) — schema in DB doc, implement. ⬜ *(next training slice)*
+- Logging polish: rest/interval/EMOM/AMRAP **timers** (`FR-TRN-003`); **PR auto-detection** read-model (`FR-TRN-004`); session history filters. ⬜
 - (SetLog append/idempotent ✅ from P0.)
 
 ### E1.4 — Nutrition  ⬜
