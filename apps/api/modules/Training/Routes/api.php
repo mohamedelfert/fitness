@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Training\Http\ExerciseController;
 use Modules\Training\Http\HistoryController;
+use Modules\Training\Http\PersonalRecordController;
 use Modules\Training\Http\ProgramController;
 use Modules\Training\Http\SessionController;
 use Modules\Training\Http\SetLogController;
@@ -17,5 +18,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('sessions', [SessionController::class, 'store']);
     Route::post('sessions/{session}/sets', [SetLogController::class, 'store']);
+    Route::post('sessions/{session}/finish', [SessionController::class, 'finish']);
     Route::get('me/history', [HistoryController::class, 'index']);
+    Route::get('me/records', [PersonalRecordController::class, 'index']);
 });

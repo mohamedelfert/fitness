@@ -158,6 +158,16 @@ paths:
         '201': { description: created, content: { application/json: { schema: { $ref: '#/components/schemas/SetLog' } } } }
         '200': { description: idempotent replay (returns original), content: { application/json: { schema: { $ref: '#/components/schemas/SetLog' } } } }
 
+  /sessions/{sessionId}/finish:
+    post:
+      summary: Close a session → refresh PRs/outcomes async (FR-TRN-004)
+      parameters:
+        - { name: sessionId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/SessionEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+
   /me/history:
     get:
       summary: Session history (cursor-paginated)
@@ -166,6 +176,13 @@ paths:
         - { name: limit, in: query, schema: { type: integer, default: 25 } }
       responses:
         '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/SessionList' } } } }
+
+  /me/records:
+    get:
+      summary: The Person's personal records (read-model, FR-TRN-004)
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/PersonalRecordList' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
 
 components:
   securitySchemes:
@@ -398,6 +415,23 @@ components:
       properties:
         data: { type: array, items: { $ref: '#/components/schemas/Session' } }
         meta: { $ref: '#/components/schemas/CursorMeta' }
+    SessionEnvelope:
+      type: object
+      properties:
+        data: { $ref: '#/components/schemas/Session' }
+    PersonalRecord:
+      type: object
+      properties:
+        exercise_id: { $ref: '#/components/schemas/Ulid' }
+        exercise_name: { type: string, nullable: true }
+        metric: { type: string, enum: [max_load, est_1rm, max_reps] }
+        value: { type: number }
+        achieved_at: { type: string, format: date-time, nullable: true }
+        session_id: { $ref: '#/components/schemas/Ulid' }
+    PersonalRecordList:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/PersonalRecord' } }
     SetLogCreate:
       type: object
       required: [exercise_id, set_index, reps]
