@@ -1,7 +1,7 @@
 # SESSION_HANDOFF.md — Resume Here
 
 > **Purpose:** everything needed to continue Fitness OS in a fresh conversation without starting over.
-> **Last updated:** 2026-06-13 · **Repo:** local `/home/mohamed/Desktop/work/fitness` → **remote** `github.com/mohamedelfert/fitness` (branch `main`).
+> **Last updated:** 2026-06-13 (onboarding profile capture + deep phase plan shipped) · **Repo:** local `/home/mohamed/Desktop/work/fitness` → **remote** `github.com/mohamedelfert/fitness` (branch `main`).
 
 ---
 
@@ -62,8 +62,9 @@ docker compose exec api php artisan db:seed --class="Database\Seeders\PlatformAd
 - The container reads **`apps/api/.env.docker`** (mounted over `/app/.env`), NOT the host `.env`. Reason: `php artisan serve` forwards only `.env`-file vars to its request child, so container `environment:` vars were invisible to served requests (DB/redis showed "down"). Edit `.env.docker` for container config; host `.env` stays for host-CLI dev.
 
 ## 6. What's NEXT (pick up here)
-**Immediate Phase-0 leftovers:** social OAuth (Apple/Google) on `Person`.
-**Phase 1 (B2C + AI MVP) — recommended first task:** **Onboarding + PAR-Q+ health-screen gate** (`FR-IDN` + `FR-AI-007`) — the safety prerequisite before any AI plan generation. Then: exercise library + training log polish → nutrition/food log → **AI Brain** (gen + safety gate + RAG + credit metering).
+**Done since last handoff (on `main`):** **full deep `docs/PHASE_PLAN.md`** (all phases task-level; P4 planning-time) · **Onboarding profile capture + goals** (`FR-IDN`, `FR-ENG-001`) — new **Engagement** module (`goals`), `GET/PATCH /v1/me`, `POST /v1/onboarding`, `GET/POST /v1/goals`, `AiInputProfile` Brain contract (TDD, 14 tests). Suite now **33 tests / 101 assertions** (3 Filament skips on host).
+**Immediate Phase-0 leftover:** social OAuth (Apple/Google) on `Person` (`FR-IDN-001`) — slots anytime.
+**Phase 1 — recommended next (per PHASE_PLAN intra-phase order):** E1.3 **exercise library + training-log polish** (timers/PRs) → E1.4 **nutrition/food log** → then **E1.6 AI Brain** (gen + safety gate + RAG + credit metering) once Q5/Q7 land. `AiInputProfile.ready_for_ai` already signals J1 readiness; E1.6 must still call the `ai-plan.generate` Gate (screen-passed) for enforcement.
 **AI Brain spike** (`docs/AI_BRAIN_SPIKE.md`) is the highest-risk item — **blocked on**:
 - **Q5** — AI provider API key (default plan: Claude-primary + fallback gateway).
 - **Q7** — clinical contraindication ruleset source (for the safety post-eval).
