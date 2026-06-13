@@ -62,7 +62,7 @@ Cross-cutting workstreams run **every** phase (see `EXECUTION_PLAN.md §9` and t
 ### E1.4 — Nutrition  🟡
 - **Food DB + logging + daily summary** ✅ (`FR-NUT-001/002/003`) — TDD, 13 tests: new **Nutrition** module; `food_items` (localized `name_i18n` via `App\Casts\LocalizedJson` so Arabic stays substring-searchable on MariaDB+MySQL, barcode-indexed) + append-only idempotent `food_logs`. `GET /v1/foods?q=` (localized search), `GET /v1/foods/barcode/{code}`, `POST /v1/food-logs` (snapshots servings×per-serving macros, or custom entry), `GET /v1/me/nutrition/summary?date=`; bilingual `FoodLibrarySeeder`.
 - **Water + supplement logging** ✅ (`FR-NUT-006/007`) — TDD, 6 tests: append-only idempotent `water_logs`/`supplement_logs`; `POST /v1/water-logs`, `POST /v1/supplement-logs`; water rolled into the daily summary. Recipes/custom foods (`FR-NUT-009`) ⬜.
-- `meal_plans → meal_plan_days → meal_plan_items` (schema in DB doc) — the nutrition analog of programs; AI-populated (E1.6). ⬜
+- **Meal plan read model** ✅ (`FR-AI-002`) — TDD, 4 tests: `meal_plans → meal_plan_days → meal_plan_items` tables/models/factories; `GET /v1/meal-plans`, `GET /v1/meal-plans/{id}` (nested days→items, person-scoped, cross-person→404). Nutrition analog of programs; **AI generation (E1.6) populates it.** Recipes/custom foods (`FR-NUT-009`) ⬜.
 - AI food-image recognition (`FR-NUT-004`) + voice logging (`FR-NUT-005`) — buy/partner vision initially. ⬜
 
 ### E1.5 — Body, progress & wearables  ⬜

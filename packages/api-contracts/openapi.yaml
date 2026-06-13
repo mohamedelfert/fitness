@@ -273,6 +273,23 @@ paths:
         '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/NutritionSummaryEnvelope' } } } }
         '401': { $ref: '#/components/responses/Problem' }
 
+  /meal-plans:
+    get:
+      summary: The Person's meal plans (FR-AI-002)
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/MealPlanList' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /meal-plans/{mealPlanId}:
+    get:
+      summary: A meal plan with nested days and items
+      parameters:
+        - { name: mealPlanId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/MealPlanEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+
 components:
   securitySchemes:
     bearerAuth: { type: http, scheme: bearer }
@@ -588,6 +605,50 @@ components:
             fat: { type: number }
             water_ml: { type: integer }
             entries: { type: integer }
+    MealPlanSummary:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/Ulid' }
+        name: { type: string }
+        source: { type: string, enum: [ai, coach, template, self] }
+        status: { type: string }
+        start_date: { type: string, format: date, nullable: true }
+    MealPlan:
+      allOf:
+        - $ref: '#/components/schemas/MealPlanSummary'
+        - type: object
+          properties:
+            daily_targets: { type: object, nullable: true, description: '{kcal, protein, carbs, fat}' }
+            days: { type: array, items: { $ref: '#/components/schemas/MealPlanDay' } }
+    MealPlanDay:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/Ulid' }
+        day_index: { type: integer }
+        name: { type: string }
+        ordering: { type: integer }
+        items: { type: array, items: { $ref: '#/components/schemas/MealPlanItem' } }
+    MealPlanItem:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/Ulid' }
+        meal_type: { type: string, enum: [breakfast, lunch, dinner, snack] }
+        food_item_id: { $ref: '#/components/schemas/Ulid' }
+        food_name: { type: string, nullable: true }
+        recipe_id: { $ref: '#/components/schemas/Ulid' }
+        servings: { type: number }
+        target_kcal: { type: number, nullable: true }
+        target_macros: { type: object, nullable: true }
+        ordering: { type: integer }
+        notes: { type: string, nullable: true }
+    MealPlanList:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/MealPlanSummary' } }
+    MealPlanEnvelope:
+      type: object
+      properties:
+        data: { $ref: '#/components/schemas/MealPlan' }
     SetLogCreate:
       type: object
       required: [exercise_id, set_index, reps]

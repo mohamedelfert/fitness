@@ -83,7 +83,8 @@
 | FR-TRN-002/003 | Training log polish (timers, history filters) | ⬜ — SetLog append/idempotent ✅ (P0); **timers are largely client-side** (Flutter, E1.10); history filters pending. |
 | FR-NUT-001/002/003 | Food DB + food logging + daily summary | 🟡 **Core ✅** (TDD, 13 tests): new **Nutrition** module — `food_items` (localized, barcode) + `food_logs` (append-only, idempotent); `GET /v1/foods?q=` (localized search incl. Arabic via `LocalizedJson` cast), `GET /v1/foods/barcode/{code}`, `POST /v1/food-logs` (snapshots servings×macros, or custom), `GET /v1/me/nutrition/summary?date=`; bilingual `FoodLibrarySeeder`. **Water/supplements, recipes, meal_plans, AI photo/voice still ⬜.** |
 | FR-NUT-006/007 | Water + supplement logging | ✅ (TDD, 6 tests): append-only idempotent `water_logs`/`supplement_logs`; `POST /v1/water-logs`, `POST /v1/supplement-logs`; water folded into `/v1/me/nutrition/summary`. |
-| FR-NUT-009, FR-NUT-004/005 | Recipes · meal plans · AI photo/voice logging | ⬜ |
+| FR-AI-002 (meal plans) | Meal plan read model | ✅ (TDD, 4 tests): `meal_plans → meal_plan_days → meal_plan_items` tables/models/factories; `GET /v1/meal-plans` + `GET /v1/meal-plans/{id}` (nested, person-scoped, cross-person→404). Staged for AI generation (E1.6) to populate. |
+| FR-NUT-009, FR-NUT-004/005 | Recipes · AI photo/voice logging | ⬜ |
 | FR-AI-001/002 + NFR-AI | AI Brain core (gen + safety gate + RAG + credit meter + gateway) | ⬜ |
 | FR-ENG-006, J2 | Today screen + smart notifications | ⬜ |
 | FR-BIO-*, FR-AN-001/005 | Progress + AI analysis + biometrics + photos + weekly report | ⬜ |
