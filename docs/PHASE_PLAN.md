@@ -54,8 +54,8 @@ Cross-cutting workstreams run **every** phase (see `EXECUTION_PLAN.md §9` and t
 
 ### E1.3 — Training  🟡
 - **Exercise library + search** ✅ (`FR-TRN-001/006`) — TDD, 10 tests: `GET /v1/exercises` (q + muscle/equipment filters, cursor, `Accept-Language` localized) + `GET /v1/exercises/{id}`; `exercises` enriched to the DB-design spec (`secondary_muscles`, `mechanics`, `media_keys`); `Exercise::scopeSearch` DB-backed (one method to swap for **Meilisearch** in prod); bilingual dev seeder with contraindications (full licensed dataset = Q4). *Names are canonical (not localized) — Arabic-name search is a deliberate open follow-up, not invented here.*
-- Program model & builder: `programs → workouts → workout_exercises` (`FR-TRN-005`) — schema in DB doc, implement. ⬜ *(next training slice)*
-- Logging polish: rest/interval/EMOM/AMRAP **timers** (`FR-TRN-003`); **PR auto-detection** read-model (`FR-TRN-004`); session history filters. ⬜
+- **Program model** ✅ (`FR-TRN-005`) — TDD, 4 tests: `programs → workouts → workout_exercises` tables + models + factories; `GET /v1/programs`, `GET /v1/programs/{id}` (nested, person-scoped, cross-person→404). Read surface for the Today loop; **AI generation (E1.6) and the coach/advanced interactive builder (P2) populate it.**
+- Logging polish: rest/interval/EMOM/AMRAP **timers** (`FR-TRN-003`); **PR auto-detection** read-model (`FR-TRN-004`); session history filters. ⬜ *(next training slice)*
 - (SetLog append/idempotent ✅ from P0.)
 
 ### E1.4 — Nutrition  ⬜

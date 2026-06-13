@@ -113,6 +113,23 @@ paths:
         '401': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
 
+  /programs:
+    get:
+      summary: The Person's training programs (FR-TRN-005, FR-AI-001)
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/ProgramList' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /programs/{programId}:
+    get:
+      summary: A program with nested workouts and prescriptions
+      parameters:
+        - { name: programId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/ProgramEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+
   /sessions:
     post:
       summary: Start a training Session (idempotent)
@@ -319,6 +336,50 @@ components:
       properties:
         data: { type: array, items: { $ref: '#/components/schemas/Exercise' } }
         meta: { $ref: '#/components/schemas/CursorMeta' }
+    ProgramSummary:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/Ulid' }
+        name: { type: string }
+        source: { type: string, enum: [ai, coach, template, self] }
+        status: { type: string, enum: [active, completed, archived] }
+        start_date: { type: string, format: date, nullable: true }
+    Program:
+      allOf:
+        - $ref: '#/components/schemas/ProgramSummary'
+        - type: object
+          properties:
+            mesocycle: { type: object, nullable: true }
+            workouts: { type: array, items: { $ref: '#/components/schemas/Workout' } }
+    Workout:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/Ulid' }
+        day_index: { type: integer }
+        name: { type: string }
+        ordering: { type: integer }
+        exercises: { type: array, items: { $ref: '#/components/schemas/WorkoutExercise' } }
+    WorkoutExercise:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/Ulid' }
+        exercise_id: { $ref: '#/components/schemas/Ulid' }
+        exercise_name: { type: string, nullable: true }
+        order: { type: integer }
+        target_sets: { type: integer, nullable: true }
+        target_reps: { type: string, nullable: true, description: 'range/scheme e.g. "6-8", "AMRAP"' }
+        target_load: { type: string, nullable: true, description: 'e.g. "70%", "20kg", "bodyweight"' }
+        rest_sec: { type: integer, nullable: true }
+        tempo: { type: string, nullable: true }
+        notes: { type: string, nullable: true }
+    ProgramList:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/ProgramSummary' } }
+    ProgramEnvelope:
+      type: object
+      properties:
+        data: { $ref: '#/components/schemas/Program' }
     SessionCreate:
       type: object
       properties:
