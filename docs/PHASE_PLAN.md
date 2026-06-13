@@ -42,12 +42,12 @@ Cross-cutting workstreams run **every** phase (see `EXECUTION_PLAN.md §9` and t
 
 ### E1.1 — Onboarding & health screen  🟡
 - **PAR-Q+ health screen + AI safety gate** ✅ (`FR-AI-007`) — `health_screens` (append-only), `Parq` scoring, `ai-plan.generate` gate.
-- **Onboarding profile capture** ⬜ *(next task)* — `FR-IDN`:
-  - DB: profile fields/`onboarding_state` (sex, dob, height) + `goals` table (`FR-ENG-001`), equipment, training days/week, dietary prefs/restrictions, injuries.
-  - API: `GET/PATCH /v1/me/profile`; `POST /v1/onboarding` (multi-step submit); `GET/POST /v1/goals`.
-  - Service: assemble the **AI input profile** (goal, level, equipment, schedule, diet, injuries, PAR-Q status) — the contract the Brain consumes.
-  - Tests: profile persists; onboarding marks complete; injuries captured for contraindication gating.
-- **Onboarding completion → first plan handoff** ⬜ — sets state so J1 ends at a generated plan (depends on E1.6).
+- **Onboarding profile capture** ✅ (`FR-IDN`, `FR-ENG-001`) — TDD, 14 tests/51 assertions:
+  - DB: `goals` table (new **Engagement** module); training profile (experience_level, equipment, training_days_per_week, dietary prefs/restrictions, injuries) in `persons.onboarding_state.profile`; demographic basics on `persons`.
+  - API: `GET/PATCH /v1/me`, `POST /v1/onboarding` (multi-step submit → marks complete), `GET/POST /v1/goals` — all under `auth:sanctum`; vocab-validated.
+  - Service: `Identity\Support\AiInputProfile::for(Person)` assembles the **Brain contract** (goals, level, equipment, schedule, diet, injuries, demographics, PAR-Q status, `ready_for_ai`); `OnboardingProfile` holds the shared vocab + validation.
+  - Tests: profile persists; onboarding marks complete; goals scoped to Person; **injuries + screen status carried for contraindication gating**; `ready_for_ai` false unless screen `passed` AND onboarding complete.
+- **Onboarding completion → first plan handoff** ⬜ — `ai_input_profile.ready_for_ai` now signals readiness; wiring J1 to end at a generated plan depends on E1.6.
 
 ### E1.2 — Identity completeness  ⬜
 - Social OAuth (Apple/Google) `FR-IDN-001` · GDPR export (`/v1/me/export`) + account deletion (`FR-IDN-004`) · profile/account management · push-token registration (`FR-APP-006`).

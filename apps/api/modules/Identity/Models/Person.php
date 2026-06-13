@@ -37,6 +37,39 @@ class Person extends Authenticatable
             'password' => 'hashed',
             'onboarding_state' => 'array',
             'dob' => 'date',
+            'height_cm' => 'integer',
         ];
+    }
+
+    /**
+     * The onboarding training profile the AI Brain consumes (experience level, equipment,
+     * schedule, diet, injuries). Lives under onboarding_state.profile (DATABASE_DESIGN §2.1).
+     *
+     * @return array<string, mixed>
+     */
+    public function trainingProfile(): array
+    {
+        return $this->onboarding_state['profile'] ?? [];
+    }
+
+    public function isOnboardingComplete(): bool
+    {
+        return (bool) ($this->onboarding_state['completed'] ?? false);
+    }
+
+    /** Merge captured training-profile fields, preserving any already set. */
+    public function mergeTrainingProfile(array $fields): void
+    {
+        $state = $this->onboarding_state ?? [];
+        $state['profile'] = array_merge($state['profile'] ?? [], $fields);
+        $this->onboarding_state = $state;
+    }
+
+    public function markOnboardingComplete(): void
+    {
+        $state = $this->onboarding_state ?? [];
+        $state['completed'] = true;
+        $state['completed_at'] = now()->toIso8601String();
+        $this->onboarding_state = $state;
     }
 }

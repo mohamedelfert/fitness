@@ -59,7 +59,8 @@
 | POST | `/v1/auth/login` | Email/password | P1 |
 | POST | `/v1/auth/social` | Apple/Google OAuth exchange | P1 |
 | POST | `/v1/auth/refresh` · `/logout` | Token lifecycle | P1 |
-| GET/PATCH | `/v1/me` | Person profile (locale, units, tz) | P1 |
+| GET/PATCH | `/v1/me` | Person profile — basics + onboarding training profile (FR-IDN-002) | P1 |
+| POST | `/v1/onboarding` | Multi-step onboarding submit: basics + training profile + goals → marks complete (J1) | P1 |
 | GET | `/v1/health-screen/questions` | PAR-Q+ questionnaire (7 questions) to render | P1 |
 | POST | `/v1/me/health-screen` | Submit PAR-Q+ → passed/flagged; sets the AI-plan gate (FR-AI-007) | P1 |
 | GET | `/v1/me/health-screen` | Current screen status + latest screening | P1 |

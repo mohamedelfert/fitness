@@ -1,7 +1,7 @@
 # IMPLEMENTATION_PROGRESS.md
 ### Fitness OS — Living Progress Tracker
 
-> **Status:** Active · **Owner:** Eng/Product Leadership · **Last updated:** 2026-06-12
+> **Status:** Active · **Owner:** Eng/Product Leadership · **Last updated:** 2026-06-13
 > **Document 10 of 10.** The single source of truth for *where we are*. Updated continuously — `BLUEPRINT.md §10` makes "update this file" part of the Definition of Done. Legend: ✅ done · 🟡 in progress · ⬜ not started · 🚫 blocked.
 
 ---
@@ -76,7 +76,7 @@
 ### Phase 1 — B2C + AI MVP (FR-level)
 | FR group | Feature | Status |
 |---|---|---|
-| FR-IDN, FR-AI-007 | Onboarding + PAR-Q+ health screen | 🟡 **PAR-Q+ screen + AI safety gate ✅** (TDD, 6 tests/19 assertions; `ai-plan.generate` gate requires `passed`). Broader profile onboarding (goals/equipment/injuries) next. |
+| FR-IDN, FR-AI-007, FR-ENG-001 | Onboarding + PAR-Q+ health screen | 🟡 **PAR-Q+ screen + AI safety gate ✅** (6 tests). **Onboarding profile capture ✅** (TDD, 14 tests/51 assertions): `GET/PATCH /v1/me`, `POST /v1/onboarding`, `GET/POST /v1/goals` (new Engagement module + `goals` table); training profile (experience/equipment/schedule/diet/injuries) in `onboarding_state.profile`; `AiInputProfile` assembles the Brain contract incl. injuries + screen status. Social OAuth + first-plan handoff (needs E1.6) remain. |
 | FR-TRN-* | Exercise library + training log (offline, timers, history, PRs) | ⬜ |
 | FR-NUT-001/002/003/006 | Food DB + nutrition log (search/barcode/macros/water) | ⬜ |
 | FR-AI-001/002 + NFR-AI | AI Brain core (gen + safety gate + RAG + credit meter + gateway) | ⬜ |
