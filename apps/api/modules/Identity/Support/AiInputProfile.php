@@ -24,7 +24,7 @@ final class AiInputProfile
             ->get()
             ->map(fn (Goal $g) => [
                 'type' => $g->type,
-                'target_value' => $g->target_value,
+                'target_value' => $g->target_value === null ? null : (float) $g->target_value,
                 'target_unit' => $g->target_unit,
                 'target_date' => $g->target_date?->toDateString(),
             ])->all();
@@ -45,6 +45,9 @@ final class AiInputProfile
             'locale' => $person->locale,
             'unit_system' => $person->unit_system,
             'health_screen_status' => $person->health_screen_status,
+            // Advisory readiness signal, NOT the enforcement boundary: the `ai-plan.generate`
+            // Gate (IdentityServiceProvider) authorizes on screen-passed alone. This adds the
+            // onboarding-complete precondition so the UI can route J1; E1.6 must still call the Gate.
             'ready_for_ai' => $person->health_screen_status === 'passed' && $person->isOnboardingComplete(),
         ];
     }

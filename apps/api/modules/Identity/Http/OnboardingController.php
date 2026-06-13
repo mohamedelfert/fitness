@@ -45,12 +45,13 @@ class OnboardingController extends Controller
             $person->markOnboardingComplete();
             $person->save();
 
+            // Idempotent on re-submit (network retry / edit): a Person has at most one
+            // active goal per type; re-onboarding updates its targets rather than duplicating.
             foreach ($validated['goals'] as $goal) {
-                Goal::create([
-                    'person_id' => $person->id,
-                    'status' => 'active',
-                    ...Arr::only($goal, ['type', 'target_value', 'target_unit', 'target_date']),
-                ]);
+                Goal::updateOrCreate(
+                    ['person_id' => $person->id, 'type' => $goal['type'], 'status' => 'active'],
+                    Arr::only($goal, ['target_value', 'target_unit', 'target_date']),
+                );
             }
         });
 

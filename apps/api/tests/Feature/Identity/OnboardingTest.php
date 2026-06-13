@@ -4,6 +4,7 @@ namespace Tests\Feature\Identity;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use Modules\Engagement\Models\Goal;
 use Modules\Identity\Models\Person;
 use Modules\Identity\Support\AiInputProfile;
 use Tests\TestCase;
@@ -50,6 +51,21 @@ class OnboardingTest extends TestCase
         $this->assertTrue($person->isOnboardingComplete());
         $this->assertSame('beginner', $person->trainingProfile()['experience_level']);
         $this->assertDatabaseHas('goals', ['person_id' => $person->id, 'type' => 'fat_loss']);
+    }
+
+    public function test_resubmitting_onboarding_does_not_duplicate_a_goal(): void
+    {
+        $person = Person::factory()->create();
+        Sanctum::actingAs($person);
+
+        $this->postJson('/v1/onboarding', $this->payload())->assertCreated();
+        // A network retry / edit re-submits the same goal type with a revised target.
+        $this->postJson('/v1/onboarding', $this->payload([
+            'goals' => [['type' => 'fat_loss', 'target_value' => 6, 'target_unit' => 'kg']],
+        ]))->assertCreated();
+
+        $this->assertDatabaseCount('goals', 1);
+        $this->assertSame('6.00', Goal::where('person_id', $person->id)->value('target_value'));
     }
 
     public function test_onboarding_requires_core_fields(): void

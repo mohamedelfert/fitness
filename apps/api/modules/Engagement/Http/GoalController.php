@@ -44,7 +44,7 @@ class GoalController extends Controller
         return [
             'id' => $g->id,
             'type' => $g->type,
-            'target_value' => $g->target_value,
+            'target_value' => $g->target_value === null ? null : (float) $g->target_value,
             'target_unit' => $g->target_unit,
             'target_date' => $g->target_date?->toDateString(),
             'status' => $g->status,
