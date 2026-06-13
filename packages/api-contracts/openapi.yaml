@@ -220,6 +220,50 @@ paths:
         '401': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
 
+  /water-logs:
+    post:
+      summary: Append a water intake event (idempotent) — FR-NUT-006
+      parameters: [ { $ref: '#/components/parameters/IdempotencyKey' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount_ml]
+              properties:
+                client_ulid: { $ref: '#/components/schemas/Ulid' }
+                amount_ml: { type: integer, minimum: 1 }
+                logged_at: { type: string, format: date-time }
+      responses:
+        '201': { description: created }
+        '200': { description: idempotent replay }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
+  /supplement-logs:
+    post:
+      summary: Append a supplement intake event (idempotent) — FR-NUT-007
+      parameters: [ { $ref: '#/components/parameters/IdempotencyKey' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                client_ulid: { $ref: '#/components/schemas/Ulid' }
+                name: { type: string, maxLength: 120 }
+                dose: { type: number }
+                unit: { type: string, maxLength: 16 }
+                logged_at: { type: string, format: date-time }
+      responses:
+        '201': { description: created }
+        '200': { description: idempotent replay }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
   /me/nutrition/summary:
     get:
       summary: Daily macro/calorie rollup (FR-NUT-002)
@@ -542,6 +586,7 @@ components:
             protein: { type: number }
             carbs: { type: number }
             fat: { type: number }
+            water_ml: { type: integer }
             entries: { type: integer }
     SetLogCreate:
       type: object

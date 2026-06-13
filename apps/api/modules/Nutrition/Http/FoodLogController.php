@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Modules\Nutrition\Models\FoodItem;
 use Modules\Nutrition\Models\FoodLog;
+use Modules\Nutrition\Models\WaterLog;
 
 /**
  * Append a FoodLog (FR-NUT-002) and roll up the day's macros. Append-only & idempotent
@@ -71,12 +72,16 @@ class FoodLogController extends Controller
             'COALESCE(SUM(kcal),0) kcal, COALESCE(SUM(protein),0) protein, COALESCE(SUM(carbs),0) carbs, COALESCE(SUM(fat),0) fat'
         )->first();
 
+        $waterMl = (int) WaterLog::where('person_id', $request->user()->id)
+            ->whereDate('logged_at', $date)->sum('amount_ml');
+
         return response()->json(['data' => [
             'date' => $date,
             'kcal' => (float) $sums->kcal,
             'protein' => (float) $sums->protein,
             'carbs' => (float) $sums->carbs,
             'fat' => (float) $sums->fat,
+            'water_ml' => $waterMl,
             'entries' => (clone $base)->count(),
         ]]);
     }
