@@ -16,6 +16,12 @@ use Modules\Training\Models\SetLog;
  * Refreshes the personal_records read-model for the exercises in a finished session
  * (FR-TRN-004). Async (queued) so it never sits on the logging hot path (NFR-SCAL-001).
  * Recomputes each metric from the Person's full set_log history → current best, idempotent.
+ *
+ * NOTE (latent, no action now): set_logs are append-only and corrections are new rows
+ * (INV-002). There is no correction flow yet, but once one exists a mis-logged heavy set
+ * would still win as max_load forever — PR detection will need a supersession rule then.
+ * NOTE: Epley at reps=1 returns load×1.033, not load (a true 1RM single reads ~3% high) —
+ * add a `reps === 1 ? load : …` guard if this formula is ever revisited.
  */
 class DetectPersonalRecords implements ShouldQueue
 {

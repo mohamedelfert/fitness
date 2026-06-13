@@ -30,6 +30,13 @@ class ExerciseLibrarySeederTest extends TestCase
         $this->assertNotEmpty($bench->contraindications);
     }
 
+    public function test_default_database_seeder_seeds_the_library(): void
+    {
+        $this->seed(); // runs Database\Seeders\DatabaseSeeder
+
+        $this->assertGreaterThan(0, Exercise::count());
+    }
+
     public function test_seeder_is_idempotent(): void
     {
         $this->seed(ExerciseLibrarySeeder::class);

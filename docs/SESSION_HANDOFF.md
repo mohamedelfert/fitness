@@ -46,10 +46,12 @@
 ## 5. How to run / verify (copy-paste)
 ```bash
 cd /home/mohamed/Desktop/work/fitness/apps/api
-vendor/bin/phpunit                 # 12 tests, 3 skipped on host (Filament needs intl) — EXPECTED
+vendor/bin/phpunit                 # 53 tests, 3 skipped on host (Filament needs intl) — EXPECTED
 vendor/bin/pint --test             # style gate (must pass)
-php artisan migrate:fresh          # dev DB = fitness_os (MariaDB root/root)
+php artisan migrate:fresh --seed   # dev DB = fitness_os (MariaDB root/root); seed exercise library
 php artisan route:list --path=v1   # see the slice + health routes
+# Contract guard (NO CI covers the OpenAPI — run after editing it):
+cd /home/mohamed/Desktop/work/fitness && python3 -c "import yaml,re; t=open('packages/api-contracts/openapi.yaml').read(); d=yaml.safe_load(t); s=set(d['components']['schemas']); r=set(re.findall(r'#/components/schemas/(\w+)',t)); print('refs OK' if not r-s else f'DANGLING: {r-s}')"
 # Full app incl. Filament rendering (verified working):
 docker compose up -d                 # api on :8000, mysql :3310, redis :6380, meili :7700, mailpit :8025
 docker compose exec api php artisan db:seed --class="Database\Seeders\PlatformAdminSeeder"
