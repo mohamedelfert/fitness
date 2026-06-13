@@ -184,6 +184,51 @@ paths:
         '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/PersonalRecordList' } } } }
         '401': { $ref: '#/components/responses/Problem' }
 
+  /foods:
+    get:
+      summary: Food database search (localized via Accept-Language) — FR-NUT-001
+      parameters:
+        - { name: q, in: query, description: name substring (en/ar), schema: { type: string } }
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, default: 25, maximum: 100 } }
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/FoodList' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /foods/barcode/{code}:
+    get:
+      summary: Barcode lookup (FR-NUT-003)
+      parameters:
+        - { name: code, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/FoodEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /food-logs:
+    post:
+      summary: Append a FoodLog (idempotent); from a food item or custom macros — FR-NUT-002
+      parameters: [ { $ref: '#/components/parameters/IdempotencyKey' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FoodLogCreate' }
+      responses:
+        '201': { description: created, content: { application/json: { schema: { $ref: '#/components/schemas/FoodLogEnvelope' } } } }
+        '200': { description: idempotent replay (returns original), content: { application/json: { schema: { $ref: '#/components/schemas/FoodLogEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
+  /me/nutrition/summary:
+    get:
+      summary: Daily macro/calorie rollup (FR-NUT-002)
+      parameters:
+        - { name: date, in: query, description: 'YYYY-MM-DD (default today)', schema: { type: string, format: date } }
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/NutritionSummaryEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+
 components:
   securitySchemes:
     bearerAuth: { type: http, scheme: bearer }
@@ -432,6 +477,72 @@ components:
       type: object
       properties:
         data: { type: array, items: { $ref: '#/components/schemas/PersonalRecord' } }
+    FoodItem:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/Ulid' }
+        name: { type: string, description: resolved to the request locale (Accept-Language) }
+        brand: { type: string, nullable: true }
+        barcode: { type: string, nullable: true }
+        serving_units: { type: array, items: { type: object } }
+        kcal: { type: number }
+        protein: { type: number }
+        carbs: { type: number }
+        fat: { type: number }
+    FoodEnvelope:
+      type: object
+      properties:
+        data: { $ref: '#/components/schemas/FoodItem' }
+    FoodList:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/FoodItem' } }
+        meta: { $ref: '#/components/schemas/CursorMeta' }
+    FoodLogCreate:
+      type: object
+      required: [meal_type]
+      description: Provide food_item_id (macros computed from servings) OR custom kcal/macros.
+      properties:
+        client_ulid: { $ref: '#/components/schemas/Ulid' }
+        food_item_id: { $ref: '#/components/schemas/Ulid' }
+        recipe_id: { $ref: '#/components/schemas/Ulid' }
+        meal_type: { type: string, enum: [breakfast, lunch, dinner, snack] }
+        servings: { type: number, default: 1 }
+        source: { type: string, enum: [search, barcode, image, voice, custom] }
+        kcal: { type: number, description: required when no food_item_id }
+        protein: { type: number }
+        carbs: { type: number }
+        fat: { type: number }
+        logged_at: { type: string, format: date-time }
+    FoodLog:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/Ulid' }
+        food_item_id: { $ref: '#/components/schemas/Ulid' }
+        meal_type: { type: string }
+        servings: { type: number }
+        kcal: { type: number }
+        protein: { type: number }
+        carbs: { type: number }
+        fat: { type: number }
+        source: { type: string }
+        logged_at: { type: string, format: date-time }
+    FoodLogEnvelope:
+      type: object
+      properties:
+        data: { $ref: '#/components/schemas/FoodLog' }
+    NutritionSummaryEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            date: { type: string, format: date }
+            kcal: { type: number }
+            protein: { type: number }
+            carbs: { type: number }
+            fat: { type: number }
+            entries: { type: integer }
     SetLogCreate:
       type: object
       required: [exercise_id, set_index, reps]

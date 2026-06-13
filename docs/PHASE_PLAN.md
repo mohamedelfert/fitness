@@ -59,11 +59,11 @@ Cross-cutting workstreams run **every** phase (see `EXECUTION_PLAN.md §9` and t
 - Logging polish remaining: rest/interval/EMOM/AMRAP **timers** (`FR-TRN-003`, largely client-side → E1.10 Flutter); session history filters. ⬜
 - (SetLog append/idempotent ✅ from P0.)
 
-### E1.4 — Nutrition  ⬜
-- Food DB integration (licensed/aggregated, localized) + search/barcode (`FR-NUT-001/003`).
-- Food logging: calorie/macro/micro, meal types, daily summary (`FR-NUT-002`); water (`FR-NUT-006`); supplements (`FR-NUT-007`).
-- `meal_plans → meal_plan_days → meal_plan_items` (schema in DB doc) + recipes/custom foods (`FR-NUT-009`).
-- AI food-image recognition (`FR-NUT-004`) + voice logging (`FR-NUT-005`) — buy/partner vision initially.
+### E1.4 — Nutrition  🟡
+- **Food DB + logging + daily summary** ✅ (`FR-NUT-001/002/003`) — TDD, 13 tests: new **Nutrition** module; `food_items` (localized `name_i18n` via `App\Casts\LocalizedJson` so Arabic stays substring-searchable on MariaDB+MySQL, barcode-indexed) + append-only idempotent `food_logs`. `GET /v1/foods?q=` (localized search), `GET /v1/foods/barcode/{code}`, `POST /v1/food-logs` (snapshots servings×per-serving macros, or custom entry), `GET /v1/me/nutrition/summary?date=`; bilingual `FoodLibrarySeeder`.
+- Water (`FR-NUT-006`); supplements (`FR-NUT-007`); recipes/custom foods (`FR-NUT-009`). ⬜
+- `meal_plans → meal_plan_days → meal_plan_items` (schema in DB doc) — the nutrition analog of programs; AI-populated (E1.6). ⬜
+- AI food-image recognition (`FR-NUT-004`) + voice logging (`FR-NUT-005`) — buy/partner vision initially. ⬜
 
 ### E1.5 — Body, progress & wearables  ⬜
 - Biometrics (weight/bodyfat/measurements) `FR-BIO-001`; progress photos (encrypted, signed URLs) `FR-BIO-002`.

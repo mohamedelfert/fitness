@@ -4,6 +4,7 @@ namespace Tests\Feature\Training;
 
 use Database\Seeders\ExerciseLibrarySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Modules\Nutrition\Models\FoodItem;
 use Modules\Training\Models\Exercise;
 use Tests\TestCase;
 
@@ -30,11 +31,12 @@ class ExerciseLibrarySeederTest extends TestCase
         $this->assertNotEmpty($bench->contraindications);
     }
 
-    public function test_default_database_seeder_seeds_the_library(): void
+    public function test_default_database_seeder_seeds_the_libraries(): void
     {
         $this->seed(); // runs Database\Seeders\DatabaseSeeder
 
         $this->assertGreaterThan(0, Exercise::count());
+        $this->assertGreaterThan(0, FoodItem::count());
     }
 
     public function test_seeder_is_idempotent(): void
