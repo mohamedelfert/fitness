@@ -85,7 +85,7 @@
 | FR-NUT-006/007 | Water + supplement logging | ✅ (TDD, 6 tests): append-only idempotent `water_logs`/`supplement_logs`; `POST /v1/water-logs`, `POST /v1/supplement-logs`; water folded into `/v1/me/nutrition/summary`. |
 | FR-AI-002 (meal plans) | Meal plan read model | ✅ (TDD, 4 tests): `meal_plans → meal_plan_days → meal_plan_items` tables/models/factories; `GET /v1/meal-plans` + `GET /v1/meal-plans/{id}` (nested, person-scoped, cross-person→404). Staged for AI generation (E1.6) to populate. |
 | FR-NUT-009, FR-NUT-004/005 | Recipes · AI photo/voice logging | ⬜ |
-| FR-AI-001/002 + NFR-AI | AI Brain core (gen + safety gate + RAG + credit meter + gateway) | ⬜ |
+| FR-AI-001/002 + NFR-AI | AI Brain core (gen + safety gate + RAG + credit meter + gateway) | 🟡 **Program generation + safety sandwich ✅** (TDD, 8 tests/21 assertions): new **AiOrchestration** module — provider-agnostic `LlmGateway` seam (ADR-004) + DTOs (`LlmRequest`/`LlmResult`), `ProgramGenerator` runs RAG-context → generate → parse → resolve-slugs → contraindication post-eval → reject+regenerate → persist (INV-005: nothing persists unless safe); `POST /v1/ai/program` enforces `ai-plan.generate` gate (403) + onboarding (422); every call logged to `ai_interactions` (cost/latency/verdict, DATABASE_DESIGN §2.5). Default gateway throws until **Q5** (real Claude adapter); contraindication match is a body-part heuristic until **Q7** (clinical ruleset). **MealPlan gen, AICredit wallet/meter debit, RAG A/B, model-tiering, streaming still ⬜.** |
 | FR-ENG-006, J2 | Today screen + smart notifications | ⬜ |
 | FR-BIO-*, FR-AN-001/005 | Progress + AI analysis + biometrics + photos + weekly report | ⬜ |
 | FR-BIO-003, FR-AI-005 | Wearables ingest + recovery tips | ⬜ |

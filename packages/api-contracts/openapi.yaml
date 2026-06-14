@@ -130,6 +130,20 @@ paths:
         '401': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
 
+  /ai/program:
+    post:
+      summary: Generate an AI training program (FR-AI-001) — RAG-grounded, safety post-evaluated (FR-AI-007 / INV-005)
+      description: >
+        Generates a personalized Program from the Person's profile and persists it only
+        after the contraindication safety post-eval passes (INV-005). Requires a
+        PAR-Q+-cleared Person (the `ai-plan.generate` gate → 403) and completed onboarding
+        (→ 422). 422 is also returned when no safe, valid plan could be generated.
+      responses:
+        '201': { description: created, content: { application/json: { schema: { $ref: '#/components/schemas/ProgramEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
   /sessions:
     post:
       summary: Start a training Session (idempotent)
