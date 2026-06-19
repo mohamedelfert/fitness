@@ -164,6 +164,28 @@ paths:
         '403': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
 
+  /ai/exercise-alternatives:
+    post:
+      summary: Suggest safe exercise swaps (FR-AI-003) — cheap-tier, contraindication-checked
+      description: >
+        Returns a ranked list of alternatives to a given exercise that train a similar pattern
+        under the athlete's equipment/injury constraints. Each suggestion passes the
+        contraindication safety post-eval (INV-005 — unsafe suggestions trigger regeneration).
+        Nothing is persisted (200, not 201); the member applies a swap to a program separately.
+        Same gate (→ 403), onboarding (→ 422), and funded-wallet (→ 402) preconditions; an
+        unknown `exercise_slug` is 422. Debits one AICredit on success (cheap-tier model).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExerciseAlternativesRequest' }
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/ExerciseAlternativesEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '402': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
   /sessions:
     post:
       summary: Start a training Session (idempotent)
@@ -557,6 +579,33 @@ components:
       type: object
       properties:
         data: { $ref: '#/components/schemas/AiCreditWallet' }
+    ExerciseAlternativesRequest:
+      type: object
+      required: [exercise_slug]
+      properties:
+        exercise_slug: { type: string, description: slug of the exercise to find swaps for }
+        count: { type: integer, minimum: 1, maximum: 5, default: 3 }
+    ExerciseAlternative:
+      type: object
+      properties:
+        exercise_id: { $ref: '#/components/schemas/Ulid' }
+        slug: { type: string }
+        name: { type: string }
+        rationale: { type: string, nullable: true }
+    ExerciseAlternatives:
+      type: object
+      properties:
+        source:
+          type: object
+          properties:
+            id: { $ref: '#/components/schemas/Ulid' }
+            slug: { type: string }
+            name: { type: string }
+        alternatives: { type: array, items: { $ref: '#/components/schemas/ExerciseAlternative' } }
+    ExerciseAlternativesEnvelope:
+      type: object
+      properties:
+        data: { $ref: '#/components/schemas/ExerciseAlternatives' }
     SessionCreate:
       type: object
       properties:

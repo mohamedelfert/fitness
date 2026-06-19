@@ -30,6 +30,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Exercise alternatives (FR-AI-003)
+    |--------------------------------------------------------------------------
+    | Swaps under equipment/injury constraints. A `cheap` tier — a single-exercise
+    | substitution doesn't need full-plan reasoning (the model-tiering margin lever,
+    | ARCH §6). Same reject-and-regenerate safety loop as the plan generators.
+    */
+    'exercise_alternatives' => [
+        'tier' => 'cheap',
+        'max_attempts' => 2,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Cost meter (NFR-AI-001 / NFR-OPS-002)
     |--------------------------------------------------------------------------
     | Micro-USD per 1,000 tokens, keyed by provider model id. Feeds cost_micros
@@ -56,6 +69,7 @@ return [
         'default' => 1,
         'program' => 1,
         'meal_plan' => 1,
+        'exercise_alternatives' => 1,
         'free_grant' => 10,
     ],
 
