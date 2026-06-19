@@ -18,6 +18,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Meal-plan generation (FR-AI-002)
+    |--------------------------------------------------------------------------
+    | Same safety-loop semantics as program generation; the dietary post-eval
+    | (DietaryScanner) plays the contraindication-scan role.
+    */
+    'meal_plan' => [
+        'tier' => 'strong',
+        'max_attempts' => 2,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Cost meter (NFR-AI-001 / NFR-OPS-002)
     |--------------------------------------------------------------------------
     | Micro-USD per 1,000 tokens, keyed by provider model id. Feeds cost_micros
@@ -43,6 +55,7 @@ return [
     'credits' => [
         'default' => 1,
         'program' => 1,
+        'meal_plan' => 1,
         'free_grant' => 10,
     ],
 

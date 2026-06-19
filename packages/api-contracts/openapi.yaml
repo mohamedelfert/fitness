@@ -147,6 +147,23 @@ paths:
         '403': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
 
+  /ai/meal-plan:
+    post:
+      summary: Generate an AI meal plan (FR-AI-002) — RAG-grounded, dietary safety post-evaluated (FR-AI-007 / INV-005)
+      description: >
+        Generates a personalized MealPlan from the Person's profile/goals and persists it only
+        after the dietary safety post-eval passes (INV-005 — foods violating a dietary
+        restriction trigger regeneration). Same preconditions as /ai/program: the
+        `ai-plan.generate` gate (→ 403), completed onboarding (→ 422), and a funded AICredit
+        wallet (→ 402). 422 is also returned when no safe, valid plan could be generated.
+        Debits one AICredit only on success (FR-SAS-004); failed/rejected attempts are free.
+      responses:
+        '201': { description: created, content: { application/json: { schema: { $ref: '#/components/schemas/MealPlanEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '402': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
   /sessions:
     post:
       summary: Start a training Session (idempotent)

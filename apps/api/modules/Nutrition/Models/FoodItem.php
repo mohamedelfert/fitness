@@ -18,8 +18,8 @@ class FoodItem extends Model
     use HasUlids;
 
     protected $fillable = [
-        'source', 'external_ref', 'name_i18n', 'brand', 'barcode',
-        'serving_units', 'kcal', 'protein', 'carbs', 'fat', 'micros', 'region',
+        'source', 'slug', 'external_ref', 'name_i18n', 'brand', 'barcode',
+        'serving_units', 'kcal', 'protein', 'carbs', 'fat', 'micros', 'region', 'dietary_tags',
     ];
 
     protected function casts(): array
@@ -28,6 +28,7 @@ class FoodItem extends Model
             'name_i18n' => LocalizedJson::class,
             'serving_units' => 'array',
             'micros' => 'array',
+            'dietary_tags' => 'array',
             'kcal' => 'float',
             'protein' => 'float',
             'carbs' => 'float',

@@ -15,6 +15,7 @@ class FoodItemFactory extends Factory
 
         return [
             'source' => 'seed',
+            'slug' => fake()->unique()->slug(2),
             'name_i18n' => ['en' => $name],
             'barcode' => null,
             'serving_units' => [['label' => '100g', 'grams' => 100]],
@@ -22,6 +23,7 @@ class FoodItemFactory extends Factory
             'protein' => fake()->numberBetween(0, 40),
             'carbs' => fake()->numberBetween(0, 60),
             'fat' => fake()->numberBetween(0, 30),
+            'dietary_tags' => [],
         ];
     }
 }
