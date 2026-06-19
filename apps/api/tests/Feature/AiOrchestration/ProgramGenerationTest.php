@@ -5,6 +5,7 @@ namespace Tests\Feature\AiOrchestration;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Modules\AiOrchestration\Contracts\LlmGateway;
+use Modules\AiOrchestration\Services\AiCreditMeter;
 use Modules\AiOrchestration\Support\LlmRequest;
 use Modules\AiOrchestration\Support\LlmResult;
 use Modules\Identity\Models\Person;
@@ -23,13 +24,19 @@ class ProgramGenerationTest extends TestCase
 
     private function onboardedPerson(string $status = 'passed', array $injuries = []): Person
     {
-        return Person::factory()->create([
+        $person = Person::factory()->create([
             'health_screen_status' => $status,
             'onboarding_state' => [
                 'completed' => true,
                 'profile' => ['experience_level' => 'beginner', 'equipment' => ['bodyweight'], 'injuries' => $injuries],
             ],
         ]);
+
+        // Generation now meters AICredits (FR-SAS-004); fund the wallet so these tests
+        // exercise the safety/orchestration paths, not the credit gate (see AiCreditTest).
+        app(AiCreditMeter::class)->grant($person, 10, 'test_grant');
+
+        return $person;
     }
 
     private function programJson(array $slugs): string

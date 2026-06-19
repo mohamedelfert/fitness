@@ -73,9 +73,11 @@ Cross-cutting workstreams run **every** phase (see `EXECUTION_PLAN.md §9` and t
 - `LlmGateway` interface + Claude-primary + fallback (ADR-004); model tiering & caching (`NFR-AI-001`).
 - RAG over the Person's graph (grounding, cite sources `NFR-AI-003`).
 - Generation: Program (`FR-AI-001`), MealPlan (`FR-AI-002`), exercise alternatives (`FR-AI-003`), daily recommendation (`FR-AI-004`), conversational coach (`FR-AI-008`), plan-adjustment proposals (`FR-AI-006`).
-- **Safety post-eval gate** (contraindication scan, reject+regenerate) `NFR-AI-002`/`INV-005`; every endpoint `Gate::authorize('ai-plan.generate')`.
-- AICredit metering + enforcement + wallet/ledger (`FR-SAS-004`); `ai_interactions` logging + cost dashboard (`NFR-OPS-002`).
-- Async via queues; graceful degradation if Brain down (`NFR-REL-004`).
+- **Safety post-eval gate** ✅ (contraindication scan, reject+regenerate) `NFR-AI-002`/`INV-005`; every endpoint `Gate::authorize('ai-plan.generate')`. Shipped for Program gen (mechanism vs fake gateway; clinical ruleset = Q7).
+- AICredit metering + enforcement + wallet/ledger ✅ (`FR-SAS-004`) — `ai_credit_wallets`/`ai_credit_ledger` + `AiCreditMeter` (atomic `lockForUpdate` debit, single-entry signed ledger, debit-once-on-success), `POST /v1/ai/program` → 402 when broke, `GET /v1/me/ai-credits`; wallets funded by config `ai.credits.free_grant` until E1.9 plan grants. `ai_interactions` logging ✅; cost dashboard (`NFR-OPS-002`) ⬜.
+- Async via queues; graceful degradation if Brain down (`NFR-REL-004`). ⬜
+- **Deferred decision — MealPlan generation food-grounding** (`FR-AI-002`): how the Brain references foods. (a) library-referenced — add `slug` + dietary tags to `food_items` so a real dietary-restriction safety scan mirrors the exercise contraindication path; vs (b) free-form meals with macros — `meal_plan_items.food_item_id` is already nullable, simpler, but the dietary post-eval is weaker. Decide before building MealPlan gen.
+- **Deferred decision — AICredit funding trigger** (`FR-SAS-004`): wallets currently start empty; production needs an explicit grant. Options: grant `free_grant` on onboarding completion (couples Identity→AiOrchestration, cleanest via an event) vs wait for E1.9 plan grants. Picked B-style stopgap for now (config grant, tests fund explicitly).
 
 ### E1.7 — AI analytics  ⬜
 - Progress analysis + goal projection (`FR-AN-001`); adherence analytics (`FR-AN-002`); weekly report (`FR-AN-005`). Computed as async read-models.

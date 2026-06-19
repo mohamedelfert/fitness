@@ -28,4 +28,22 @@ return [
         'default' => ['in' => 0, 'out' => 0],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | AICredit meter (FR-SAS-004 / NFR-OPS-002)
+    |--------------------------------------------------------------------------
+    | The user-facing usage unit (distinct from cost_micros, which is our provider
+    | spend for margin tracking). Each generation debits `credits.<feature>` from the
+    | Person's wallet, falling back to `credits.default`. A wallet that can't cover the
+    | cost yields a 402 (API_SPECIFICATION §4); a generation is debited once, only on
+    | success (failed/rejected attempts are free to the user — INV-005's safety loop must
+    | never cost credits). `free_grant` is the pre-billing starter allotment: wallets are
+    | created empty and funded explicitly — E1.9 plan grants replace this stopgap.
+    */
+    'credits' => [
+        'default' => 1,
+        'program' => 1,
+        'free_grant' => 10,
+    ],
+
 ];

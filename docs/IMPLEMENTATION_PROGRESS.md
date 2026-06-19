@@ -1,7 +1,7 @@
 # IMPLEMENTATION_PROGRESS.md
 ### Fitness OS — Living Progress Tracker
 
-> **Status:** Active · **Owner:** Eng/Product Leadership · **Last updated:** 2026-06-13
+> **Status:** Active · **Owner:** Eng/Product Leadership · **Last updated:** 2026-06-19
 > **Document 10 of 10.** The single source of truth for *where we are*. Updated continuously — `BLUEPRINT.md §10` makes "update this file" part of the Definition of Done. Legend: ✅ done · 🟡 in progress · ⬜ not started · 🚫 blocked.
 
 ---
@@ -85,13 +85,13 @@
 | FR-NUT-006/007 | Water + supplement logging | ✅ (TDD, 6 tests): append-only idempotent `water_logs`/`supplement_logs`; `POST /v1/water-logs`, `POST /v1/supplement-logs`; water folded into `/v1/me/nutrition/summary`. |
 | FR-AI-002 (meal plans) | Meal plan read model | ✅ (TDD, 4 tests): `meal_plans → meal_plan_days → meal_plan_items` tables/models/factories; `GET /v1/meal-plans` + `GET /v1/meal-plans/{id}` (nested, person-scoped, cross-person→404). Staged for AI generation (E1.6) to populate. |
 | FR-NUT-009, FR-NUT-004/005 | Recipes · AI photo/voice logging | ⬜ |
-| FR-AI-001/002 + NFR-AI | AI Brain core (gen + safety gate + RAG + credit meter + gateway) | 🟡 **Program generation + safety sandwich ✅** (TDD, 8 tests/21 assertions): new **AiOrchestration** module — provider-agnostic `LlmGateway` seam (ADR-004) + DTOs (`LlmRequest`/`LlmResult`), `ProgramGenerator` runs RAG-context → generate → parse → resolve-slugs → contraindication post-eval → reject+regenerate → persist (INV-005: nothing persists unless safe); `POST /v1/ai/program` enforces `ai-plan.generate` gate (403) + onboarding (422); every call logged to `ai_interactions` (cost/latency/verdict, DATABASE_DESIGN §2.5). Default gateway throws until **Q5** (real Claude adapter); contraindication match is a body-part heuristic until **Q7** (clinical ruleset). **MealPlan gen, AICredit wallet/meter debit, RAG A/B, model-tiering, streaming still ⬜.** |
+| FR-AI-001/002 + NFR-AI | AI Brain core (gen + safety gate + RAG + credit meter + gateway) | 🟡 **Program generation + safety sandwich + AICredit meter ✅** (TDD, 16 tests/41 assertions): new **AiOrchestration** module — provider-agnostic `LlmGateway` seam (ADR-004) + DTOs (`LlmRequest`/`LlmResult`), `ProgramGenerator` runs RAG-context → generate → parse → resolve-slugs → contraindication post-eval → reject+regenerate → persist (INV-005: nothing persists unless safe); `POST /v1/ai/program` enforces `ai-plan.generate` gate (403) + onboarding (422) + **AICredit balance (402)**; every call logged to `ai_interactions` (cost/latency/verdict, DATABASE_DESIGN §2.5). **AICredit wallet/ledger + `AiCreditMeter`** (DATABASE_DESIGN §2.5): single-entry signed ledger, atomic `lockForUpdate` debit (no negative balance), debit-once-on-success (failed/regenerate attempts free), `GET /v1/me/ai-credits`. Wallets start empty + funded by config `ai.credits.free_grant` (pre-billing stopgap → E1.9 plan grants). Default gateway throws until **Q5** (real Claude adapter); contraindication match is a body-part heuristic until **Q7** (clinical ruleset). **MealPlan gen, RAG A/B, model-tiering, streaming still ⬜.** |
 | FR-ENG-006, J2 | Today screen + smart notifications | ⬜ |
 | FR-BIO-*, FR-AN-001/005 | Progress + AI analysis + biometrics + photos + weekly report | ⬜ |
 | FR-BIO-003, FR-AI-005 | Wearables ingest + recovery tips | ⬜ |
 | FR-ENG-001/002/003 | Goals, habits, streaks/XP | ⬜ |
 | FR-AI-003/006/008 | Exercise alternatives, conversational coach, plan-adjust | ⬜ |
-| FR-SAS-002/003/004 | B2C billing + credits + payments | ⬜ |
+| FR-SAS-002/003/004 | B2C billing + credits + payments | 🟡 **AICredit wallet/ledger + meter debit ✅** (FR-SAS-004, in AI core above); plans/subscriptions/trials, PSP payments, and credit top-up still ⬜. |
 | NFR-UX-003, NFR-UX-001 | i18n/RTL hardening + a11y pass | ⬜ |
 | **P1 GATE** | Retention/North-Star/AI-acceptance/margin/conversion criteria | ⬜ |
 

@@ -136,11 +136,14 @@ paths:
       description: >
         Generates a personalized Program from the Person's profile and persists it only
         after the contraindication safety post-eval passes (INV-005). Requires a
-        PAR-Q+-cleared Person (the `ai-plan.generate` gate → 403) and completed onboarding
-        (→ 422). 422 is also returned when no safe, valid plan could be generated.
+        PAR-Q+-cleared Person (the `ai-plan.generate` gate → 403), completed onboarding
+        (→ 422), and a funded AICredit wallet (→ 402). 422 is also returned when no safe,
+        valid plan could be generated. Debits one AICredit only on success (FR-SAS-004) —
+        failed/rejected attempts, including the safety regenerate loop, are not charged.
       responses:
         '201': { description: created, content: { application/json: { schema: { $ref: '#/components/schemas/ProgramEnvelope' } } } }
         '401': { $ref: '#/components/responses/Problem' }
+        '402': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
 
@@ -196,6 +199,16 @@ paths:
       summary: The Person's personal records (read-model, FR-TRN-004)
       responses:
         '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/PersonalRecordList' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /me/ai-credits:
+    get:
+      summary: AICredit wallet balance (FR-SAS-004)
+      description: >
+        The Person's metered AI usage balance. Auto-provisions an empty wallet on first
+        read, so a balance is always returned (never 404).
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/AiCreditWalletEnvelope' } } } }
         '401': { $ref: '#/components/responses/Problem' }
 
   /foods:
@@ -517,6 +530,16 @@ components:
       type: object
       properties:
         data: { $ref: '#/components/schemas/Program' }
+    AiCreditWallet:
+      type: object
+      properties:
+        balance: { type: integer, description: current spendable AICredits }
+        plan_grant: { type: integer, description: recurring allotment from the active plan }
+        period_reset_at: { type: string, format: date-time, nullable: true }
+    AiCreditWalletEnvelope:
+      type: object
+      properties:
+        data: { $ref: '#/components/schemas/AiCreditWallet' }
     SessionCreate:
       type: object
       properties:
