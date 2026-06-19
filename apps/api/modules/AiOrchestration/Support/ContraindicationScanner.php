@@ -2,12 +2,13 @@
 
 namespace Modules\AiOrchestration\Support;
 
+use Modules\AiOrchestration\Contracts\SafetyScanner;
 use Modules\Identity\Models\Person;
 use Modules\Training\Models\Exercise;
 
 /**
- * The safety post-eval (FR-AI-007 / NFR-AI-002 / INV-005): the second half of the safety
- * sandwich. Given a Person's injuries and the exercises an AI-generated plan prescribes,
+ * The training safety post-eval (FR-AI-007 / NFR-AI-002 / INV-005): the second half of the
+ * safety sandwich. Given a Person's injuries and the exercises an AI-generated plan prescribes,
  * it returns the slugs that are contraindicated for that Person. A non-empty result blocks
  * the plan and triggers regeneration.
  *
@@ -16,7 +17,7 @@ use Modules\Training\Models\Exercise;
  * PAR-Q+ flags / injuries → forbidden movement patterns) is sourced under Q7 and slots in
  * behind this same interface (`docs/AI_BRAIN_SPIKE.md` §6).
  */
-final class ContraindicationScanner
+final class ContraindicationScanner implements SafetyScanner
 {
     /**
      * @param  iterable<Exercise>  $exercises

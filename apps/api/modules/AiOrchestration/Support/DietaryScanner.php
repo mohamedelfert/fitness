@@ -2,6 +2,7 @@
 
 namespace Modules\AiOrchestration\Support;
 
+use Modules\AiOrchestration\Contracts\SafetyScanner;
 use Modules\Identity\Models\Person;
 use Modules\Nutrition\Models\FoodItem;
 
@@ -17,7 +18,7 @@ use Modules\Nutrition\Models\FoodItem;
  * hints to the model, not hazards. Matching is a simple keyword heuristic that proves the
  * mechanism — the real licensed food-allergen ontology arrives with Q4 and slots in here.
  */
-final class DietaryScanner
+final class DietaryScanner implements SafetyScanner
 {
     /**
      * @param  iterable<FoodItem>  $foods

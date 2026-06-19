@@ -4,12 +4,9 @@ namespace Modules\AiOrchestration\Services;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 use Modules\AiOrchestration\Contracts\LlmGateway;
-use Modules\AiOrchestration\Models\AiInteraction;
 use Modules\AiOrchestration\Support\DietaryScanner;
 use Modules\AiOrchestration\Support\LlmRequest;
-use Modules\AiOrchestration\Support\LlmResult;
 use Modules\Identity\Models\Person;
 use Modules\Identity\Support\AiInputProfile;
 use Modules\Nutrition\Models\FoodItem;
@@ -18,76 +15,37 @@ use Modules\Nutrition\Models\MealPlanDay;
 use Modules\Nutrition\Models\MealPlanItem;
 
 /**
- * AI meal-plan generation (FR-AI-002) wrapped in the same safety sandwich as ProgramGenerator
- * (FR-AI-007 / INV-005), with the dietary post-eval standing in for the contraindication scan:
- *
- *   RAG context (the Person's Graph) → generate → parse → resolve to real foods →
- *   dietary safety post-eval → reject + regenerate on fail → persist only when clean.
- *
- * INV-005 holds identically: a MealPlan is persisted ONLY after the output passes the
- * post-eval. Every call is logged to ai_interactions, outside the persist transaction so the
- * rejected trail survives a 422. (The attempt-loop/logging shape intentionally mirrors
- * ProgramGenerator; once a third generator lands this is worth extracting to a shared base.)
+ * AI meal-plan generation (FR-AI-002) — the nutrition twin of ProgramGenerator. The safety
+ * sandwich lives in AiGenerator; this supplies the food-library RAG request, the `days→meals`
+ * shape, food-slug resolution, the DietaryScanner (dietary restrictions standing in for
+ * contraindications), and persisting the meal_plans→days→items graph. INV-005: a MealPlan
+ * persists only via finalize(), reached only after the dietary post-eval clears the output.
  */
-class MealPlanGenerator
+class MealPlanGenerator extends AiGenerator
 {
-    public function __construct(
-        private readonly LlmGateway $gateway,
-        private readonly DietaryScanner $scanner,
-    ) {}
+    private ?Collection $candidates = null;
+
+    public function __construct(LlmGateway $gateway, DietaryScanner $scanner)
+    {
+        parent::__construct($gateway, $scanner);
+    }
 
     public function generate(Person $person): MealPlan
     {
-        $profile = AiInputProfile::for($person);
-        $candidates = FoodItem::query()->whereNotNull('slug')->orderBy('slug')->limit(300)
-            ->get(['id', 'slug', 'name_i18n']);
-        $tier = (string) config('ai.meal_plan.tier', 'strong');
-        $maxAttempts = (int) config('ai.meal_plan.max_attempts', 2);
-
-        $avoid = [];
-
-        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
-            $request = $this->buildRequest($profile, $candidates, $avoid, $tier);
-
-            $startedAt = microtime(true);
-            $result = $this->gateway->complete($request);
-            $latencyMs = (int) round((microtime(true) - $startedAt) * 1000);
-
-            $plan = $this->parse($result->text);
-            if ($plan === null) {
-                $this->log($person, $result, 'error', $latencyMs, $tier);
-
-                continue; // malformed output — never a 500; retry then give up
-            }
-
-            $resolved = $this->resolveFoods($plan);
-            if ($resolved === null) {
-                $this->log($person, $result, 'error', $latencyMs, $tier);
-
-                continue; // hallucinated slug — retry then give up
-            }
-
-            $unsafe = $this->scanner->unsafeSlugs($person, $resolved->values());
-            if ($unsafe !== []) {
-                $this->log($person, $result, 'rejected', $latencyMs, $tier);
-                $avoid = array_values(array_unique([...$avoid, ...$unsafe]));
-
-                continue; // violates a dietary restriction — regenerate avoiding these foods
-            }
-
-            $this->log($person, $result, 'passed', $latencyMs, $tier);
-
-            return DB::transaction(fn () => $this->persist($person, $plan, $resolved));
-        }
-
-        // Exhausted attempts without a safe, valid plan. INV-005: nothing persisted.
-        throw ValidationException::withMessages([
-            'meal_plan' => 'Could not generate a safe meal plan for your profile. Please try again.',
-        ]);
+        return $this->runLoop($person);
     }
 
-    /** Decode model output to a plan array, or null if it isn't a usable meal-plan object. */
-    private function parse(string $text): ?array
+    protected function feature(): string
+    {
+        return 'meal_plan';
+    }
+
+    protected function exhaustedMessage(): string
+    {
+        return 'Could not generate a safe meal plan for your profile. Please try again.';
+    }
+
+    protected function parse(string $text): ?array
     {
         $decoded = json_decode($text, true);
 
@@ -104,9 +62,9 @@ class MealPlanGenerator
      *
      * @return Collection<string, FoodItem>|null keyed by slug
      */
-    private function resolveFoods(array $plan): ?Collection
+    protected function resolve(array $parsed, array $context): ?Collection
     {
-        $slugs = collect($plan['days'])
+        $slugs = collect($parsed['days'])
             ->flatMap(fn ($d) => collect($d['meals'] ?? [])->pluck('food_slug'))
             ->filter()
             ->unique()
@@ -121,67 +79,43 @@ class MealPlanGenerator
         return $found->count() === $slugs->count() ? $found : null;
     }
 
-    /** Persist the validated plan as a MealPlan graph. Caller wraps this in a transaction. */
-    private function persist(Person $person, array $plan, Collection $resolved): MealPlan
+    /** Persist the validated plan as a MealPlan graph in one transaction. */
+    protected function finalize(Person $person, array $parsed, Collection $resolved, array $context): MealPlan
     {
-        $mealPlan = MealPlan::create([
-            'person_id' => $person->id,
-            'source' => 'ai',
-            'name' => (string) ($plan['name'] ?? 'AI Meal Plan'),
-            'daily_targets_json' => is_array($plan['daily_targets'] ?? null) ? $plan['daily_targets'] : null,
-            'start_date' => now()->toDateString(),
-            'status' => 'active',
-        ]);
-
-        foreach (array_values($plan['days']) as $dIndex => $d) {
-            $day = MealPlanDay::create([
-                'meal_plan_id' => $mealPlan->id,
-                'day_index' => (int) ($d['day_index'] ?? $dIndex + 1),
-                'name' => (string) ($d['name'] ?? 'Day '.($dIndex + 1)),
-                'ordering' => $dIndex,
+        return DB::transaction(function () use ($person, $parsed, $resolved) {
+            $mealPlan = MealPlan::create([
+                'person_id' => $person->id,
+                'source' => 'ai',
+                'name' => (string) ($parsed['name'] ?? 'AI Meal Plan'),
+                'daily_targets_json' => is_array($parsed['daily_targets'] ?? null) ? $parsed['daily_targets'] : null,
+                'start_date' => now()->toDateString(),
+                'status' => 'active',
             ]);
 
-            foreach (array_values($d['meals'] ?? []) as $mIndex => $m) {
-                MealPlanItem::create([
-                    'meal_plan_day_id' => $day->id,
-                    'meal_type' => (string) ($m['meal_type'] ?? 'meal'),
-                    'food_item_id' => $resolved[$m['food_slug']]->id,
-                    'servings' => $m['servings'] ?? 1,
-                    'target_kcal' => $m['target_kcal'] ?? null,
-                    'target_macros_json' => is_array($m['target_macros'] ?? null) ? $m['target_macros'] : null,
-                    'ordering' => $mIndex,
-                    'notes' => $m['notes'] ?? null,
+            foreach (array_values($parsed['days']) as $dIndex => $d) {
+                $day = MealPlanDay::create([
+                    'meal_plan_id' => $mealPlan->id,
+                    'day_index' => (int) ($d['day_index'] ?? $dIndex + 1),
+                    'name' => (string) ($d['name'] ?? 'Day '.($dIndex + 1)),
+                    'ordering' => $dIndex,
                 ]);
+
+                foreach (array_values($d['meals'] ?? []) as $mIndex => $m) {
+                    MealPlanItem::create([
+                        'meal_plan_day_id' => $day->id,
+                        'meal_type' => (string) ($m['meal_type'] ?? 'meal'),
+                        'food_item_id' => $resolved[$m['food_slug']]->id,
+                        'servings' => $m['servings'] ?? 1,
+                        'target_kcal' => $m['target_kcal'] ?? null,
+                        'target_macros_json' => is_array($m['target_macros'] ?? null) ? $m['target_macros'] : null,
+                        'ordering' => $mIndex,
+                        'notes' => $m['notes'] ?? null,
+                    ]);
+                }
             }
-        }
 
-        return $mealPlan->load(['days.items.foodItem']);
-    }
-
-    private function log(Person $person, LlmResult $result, string $verdict, int $latencyMs, string $tier): void
-    {
-        AiInteraction::create([
-            'person_id' => $person->id,
-            'feature' => 'meal_plan',
-            'model' => $result->model,
-            'tier' => $tier,
-            'tokens_in' => $result->tokensIn,
-            'tokens_out' => $result->tokensOut,
-            'cost_micros' => $this->costMicros($result),
-            'latency_ms' => $latencyMs,
-            'safety_verdict' => $verdict,
-        ]);
-    }
-
-    /** Cost in integer micro-USD (INV-006). Unknown/stub models price at 0 until Q5. */
-    private function costMicros(LlmResult $result): int
-    {
-        $rates = config('ai.pricing.'.$result->model, config('ai.pricing.default'));
-
-        return (int) round(
-            $result->tokensIn / 1000 * ($rates['in'] ?? 0)
-            + $result->tokensOut / 1000 * ($rates['out'] ?? 0)
-        );
+            return $mealPlan->load(['days.items.foodItem']);
+        });
     }
 
     /**
@@ -189,12 +123,16 @@ class MealPlanGenerator
      * (NFR-AI-003) keeps slug hallucination rare; the dietary post-eval catches the rest.
      * Untested by the fake gateway — kept minimal and real for the Claude adapter (Q5).
      *
-     * @param  Collection<int, FoodItem>  $candidates
+     * @param  array<string, mixed>  $context
      * @param  list<string>  $avoid
      */
-    private function buildRequest(array $profile, Collection $candidates, array $avoid, string $tier): LlmRequest
+    protected function buildRequest(Person $person, array $context, array $avoid, string $tier): LlmRequest
     {
-        $library = $candidates
+        $profile = AiInputProfile::for($person);
+        $this->candidates ??= FoodItem::query()->whereNotNull('slug')->orderBy('slug')->limit(300)
+            ->get(['id', 'slug', 'name_i18n']);
+
+        $library = $this->candidates
             ->map(fn (FoodItem $f) => $f->slug.' — '.$f->localizedName('en'))
             ->implode("\n");
 

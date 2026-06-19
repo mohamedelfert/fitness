@@ -4,12 +4,9 @@ namespace Modules\AiOrchestration\Services;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 use Modules\AiOrchestration\Contracts\LlmGateway;
-use Modules\AiOrchestration\Models\AiInteraction;
 use Modules\AiOrchestration\Support\ContraindicationScanner;
 use Modules\AiOrchestration\Support\LlmRequest;
-use Modules\AiOrchestration\Support\LlmResult;
 use Modules\Identity\Models\Person;
 use Modules\Identity\Support\AiInputProfile;
 use Modules\Training\Models\Exercise;
@@ -18,74 +15,37 @@ use Modules\Training\Models\Workout;
 use Modules\Training\Models\WorkoutExercise;
 
 /**
- * AI program generation (FR-AI-001) wrapped in the safety sandwich (FR-AI-007 / INV-005):
- *
- *   RAG context (the Person's Graph) → generate → parse → resolve to real exercises →
- *   safety post-eval → reject + regenerate on fail → persist only when clean.
- *
- * INV-005 is the hard invariant: a Program is persisted ONLY after the output passes the
- * post-eval. Every call — passed, rejected, or unparseable — is logged to ai_interactions
- * for audit/cost, and that logging is intentionally OUTSIDE the persist transaction so the
- * rejected trail survives even when generation ultimately fails (422).
+ * AI program generation (FR-AI-001). The safety sandwich (FR-AI-007 / INV-005) lives in
+ * AiGenerator; this supplies the training specifics — the exercise-library RAG request, the
+ * `workouts` shape, slug resolution, the ContraindicationScanner, and persisting the
+ * programs→workouts→workout_exercises graph. INV-005: a Program persists only via finalize(),
+ * reached only after the post-eval clears the output.
  */
-class ProgramGenerator
+class ProgramGenerator extends AiGenerator
 {
-    public function __construct(
-        private readonly LlmGateway $gateway,
-        private readonly ContraindicationScanner $scanner,
-    ) {}
+    private ?Collection $candidates = null;
+
+    public function __construct(LlmGateway $gateway, ContraindicationScanner $scanner)
+    {
+        parent::__construct($gateway, $scanner);
+    }
 
     public function generate(Person $person): Program
     {
-        $profile = AiInputProfile::for($person);
-        $candidates = Exercise::query()->orderBy('name')->limit(200)->get(['id', 'slug', 'name']);
-        $tier = (string) config('ai.program.tier', 'strong');
-        $maxAttempts = (int) config('ai.program.max_attempts', 2);
-
-        $avoid = [];
-
-        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
-            $request = $this->buildRequest($profile, $candidates, $avoid, $tier);
-
-            $startedAt = microtime(true);
-            $result = $this->gateway->complete($request);
-            $latencyMs = (int) round((microtime(true) - $startedAt) * 1000);
-
-            $plan = $this->parse($result->text);
-            if ($plan === null) {
-                $this->log($person, $result, 'error', $latencyMs, $tier);
-
-                continue; // malformed output — never a 500; retry then give up
-            }
-
-            $resolved = $this->resolveExercises($plan);
-            if ($resolved === null) {
-                $this->log($person, $result, 'error', $latencyMs, $tier);
-
-                continue; // hallucinated slug — retry then give up
-            }
-
-            $unsafe = $this->scanner->unsafeSlugs($person, $resolved->values());
-            if ($unsafe !== []) {
-                $this->log($person, $result, 'rejected', $latencyMs, $tier);
-                $avoid = array_values(array_unique([...$avoid, ...$unsafe]));
-
-                continue; // contraindicated — regenerate avoiding these movements
-            }
-
-            $this->log($person, $result, 'passed', $latencyMs, $tier);
-
-            return DB::transaction(fn () => $this->persist($person, $plan, $resolved));
-        }
-
-        // Exhausted attempts without a safe, valid plan. INV-005: nothing persisted.
-        throw ValidationException::withMessages([
-            'program' => 'Could not generate a safe program for your profile. Please try again.',
-        ]);
+        return $this->runLoop($person);
     }
 
-    /** Decode model output to a plan array, or null if it isn't a usable program object. */
-    private function parse(string $text): ?array
+    protected function feature(): string
+    {
+        return 'program';
+    }
+
+    protected function exhaustedMessage(): string
+    {
+        return 'Could not generate a safe program for your profile. Please try again.';
+    }
+
+    protected function parse(string $text): ?array
     {
         $decoded = json_decode($text, true);
 
@@ -97,14 +57,14 @@ class ProgramGenerator
     }
 
     /**
-     * Resolve every prescribed slug to a real Exercise. Returns null if the model
-     * hallucinated a slug that isn't in the library (caller treats it as a failed attempt).
+     * Resolve every prescribed slug to a real Exercise. Returns null if the model hallucinated
+     * a slug that isn't in the library (caller treats it as a failed attempt).
      *
      * @return Collection<string, Exercise>|null keyed by slug
      */
-    private function resolveExercises(array $plan): ?Collection
+    protected function resolve(array $parsed, array $context): ?Collection
     {
-        $slugs = collect($plan['workouts'])
+        $slugs = collect($parsed['workouts'])
             ->flatMap(fn ($w) => collect($w['exercises'] ?? [])->pluck('exercise_slug'))
             ->filter()
             ->unique()
@@ -119,78 +79,57 @@ class ProgramGenerator
         return $found->count() === $slugs->count() ? $found : null;
     }
 
-    /** Persist the validated plan as a Program graph. Caller wraps this in a transaction. */
-    private function persist(Person $person, array $plan, Collection $resolved): Program
+    /** Persist the validated plan as a Program graph in one transaction. */
+    protected function finalize(Person $person, array $parsed, Collection $resolved, array $context): Program
     {
-        $program = Program::create([
-            'person_id' => $person->id,
-            'source' => 'ai',
-            'name' => (string) ($plan['name'] ?? 'AI Program'),
-            'start_date' => now()->toDateString(),
-            'status' => 'active',
-        ]);
-
-        foreach (array_values($plan['workouts']) as $wIndex => $w) {
-            $workout = Workout::create([
-                'program_id' => $program->id,
-                'day_index' => (int) ($w['day_index'] ?? $wIndex + 1),
-                'name' => (string) ($w['name'] ?? 'Workout '.($wIndex + 1)),
-                'ordering' => $wIndex,
+        return DB::transaction(function () use ($person, $parsed, $resolved) {
+            $program = Program::create([
+                'person_id' => $person->id,
+                'source' => 'ai',
+                'name' => (string) ($parsed['name'] ?? 'AI Program'),
+                'start_date' => now()->toDateString(),
+                'status' => 'active',
             ]);
 
-            foreach (array_values($w['exercises'] ?? []) as $eIndex => $e) {
-                WorkoutExercise::create([
-                    'workout_id' => $workout->id,
-                    'exercise_id' => $resolved[$e['exercise_slug']]->id,
-                    'order' => $eIndex,
-                    'target_sets' => $e['target_sets'] ?? null,
-                    'target_reps' => isset($e['target_reps']) ? (string) $e['target_reps'] : null,
-                    'rest_sec' => $e['rest_sec'] ?? null,
+            foreach (array_values($parsed['workouts']) as $wIndex => $w) {
+                $workout = Workout::create([
+                    'program_id' => $program->id,
+                    'day_index' => (int) ($w['day_index'] ?? $wIndex + 1),
+                    'name' => (string) ($w['name'] ?? 'Workout '.($wIndex + 1)),
+                    'ordering' => $wIndex,
                 ]);
+
+                foreach (array_values($w['exercises'] ?? []) as $eIndex => $e) {
+                    WorkoutExercise::create([
+                        'workout_id' => $workout->id,
+                        'exercise_id' => $resolved[$e['exercise_slug']]->id,
+                        'order' => $eIndex,
+                        'target_sets' => $e['target_sets'] ?? null,
+                        'target_reps' => isset($e['target_reps']) ? (string) $e['target_reps'] : null,
+                        'rest_sec' => $e['rest_sec'] ?? null,
+                    ]);
+                }
             }
-        }
 
-        return $program->load(['workouts.workoutExercises.exercise']);
-    }
-
-    private function log(Person $person, LlmResult $result, string $verdict, int $latencyMs, string $tier): void
-    {
-        AiInteraction::create([
-            'person_id' => $person->id,
-            'feature' => 'program',
-            'model' => $result->model,
-            'tier' => $tier,
-            'tokens_in' => $result->tokensIn,
-            'tokens_out' => $result->tokensOut,
-            'cost_micros' => $this->costMicros($result),
-            'latency_ms' => $latencyMs,
-            'safety_verdict' => $verdict,
-        ]);
-    }
-
-    /** Cost in integer micro-USD (INV-006). Unknown/stub models price at 0 until Q5. */
-    private function costMicros(LlmResult $result): int
-    {
-        $rates = config('ai.pricing.'.$result->model, config('ai.pricing.default'));
-
-        return (int) round(
-            $result->tokensIn / 1000 * ($rates['in'] ?? 0)
-            + $result->tokensOut / 1000 * ($rates['out'] ?? 0)
-        );
+            return $program->load(['workouts.workoutExercises.exercise']);
+        });
     }
 
     /**
-     * Assemble the RAG-grounded, structured-output request. Grounding the model on the
-     * real exercise library (NFR-AI-003) is what keeps slug hallucination rare; the safety
-     * post-eval catches the rest. Untested by the fake gateway — kept minimal and real for
-     * when the Claude adapter lands (Q5).
+     * Assemble the RAG-grounded, structured-output request. Grounding the model on the real
+     * exercise library (NFR-AI-003) is what keeps slug hallucination rare; the safety post-eval
+     * catches the rest. Untested by the fake gateway — kept minimal and real for the Claude
+     * adapter (Q5).
      *
-     * @param  Collection<int, Exercise>  $candidates
+     * @param  array<string, mixed>  $context
      * @param  list<string>  $avoid
      */
-    private function buildRequest(array $profile, Collection $candidates, array $avoid, string $tier): LlmRequest
+    protected function buildRequest(Person $person, array $context, array $avoid, string $tier): LlmRequest
     {
-        $library = $candidates->map(fn (Exercise $e) => $e->slug.' — '.$e->name)->implode("\n");
+        $profile = AiInputProfile::for($person);
+        $this->candidates ??= Exercise::query()->orderBy('name')->limit(200)->get(['id', 'slug', 'name']);
+
+        $library = $this->candidates->map(fn (Exercise $e) => $e->slug.' — '.$e->name)->implode("\n");
 
         $system = 'You are a certified strength & conditioning coach. Generate a safe, '
             .'progressive training program personalized to the athlete profile. Use ONLY '
