@@ -186,6 +186,30 @@ paths:
         '403': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
 
+  /ai/plan-adjustment:
+    post:
+      summary: Propose safe adjustments to a program (FR-AI-006) — contraindication-checked, nothing persisted
+      description: >
+        Reviews one of the Person's programs and returns proposed incremental changes (swaps,
+        added/removed work, progression/deload). Each prescribed exercise passes the
+        contraindication safety post-eval (INV-005 — unsafe proposals trigger regeneration).
+        Nothing is persisted (200, not 201); the member applies changes separately. An empty
+        list is a valid "no changes recommended" answer. Same gate (→ 403), onboarding (→ 422),
+        and funded-wallet (→ 402) preconditions; the program is person-owned, so an unknown or
+        cross-person `program_id` is 404. Debits one AICredit on success.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PlanAdjustmentRequest' }
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/PlanAdjustmentEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '402': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
   /sessions:
     post:
       summary: Start a training Session (idempotent)
@@ -606,6 +630,39 @@ components:
       type: object
       properties:
         data: { $ref: '#/components/schemas/ExerciseAlternatives' }
+    PlanAdjustmentRequest:
+      type: object
+      required: [program_id]
+      properties:
+        program_id: { $ref: '#/components/schemas/Ulid' }
+        goal: { type: string, maxLength: 500, description: optional free-text adjustment goal (e.g. "add a deload week") }
+    PlanAdjustment:
+      type: object
+      properties:
+        exercise_id: { $ref: '#/components/schemas/Ulid' }
+        slug: { type: string, description: slug of the prescribed exercise }
+        name: { type: string }
+        action: { type: string, enum: [swap, add, remove, adjust], nullable: true }
+        replaces_slug: { type: string, nullable: true, description: current exercise being swapped out, if any }
+        target_sets: { type: integer, nullable: true }
+        target_reps: { type: string, nullable: true }
+        rationale: { type: string, nullable: true }
+    PlanAdjustments:
+      type: object
+      properties:
+        program:
+          type: object
+          properties:
+            id: { $ref: '#/components/schemas/Ulid' }
+            name: { type: string }
+        adjustments:
+          type: array
+          description: empty ⇒ no changes recommended
+          items: { $ref: '#/components/schemas/PlanAdjustment' }
+    PlanAdjustmentEnvelope:
+      type: object
+      properties:
+        data: { $ref: '#/components/schemas/PlanAdjustments' }
     SessionCreate:
       type: object
       properties:

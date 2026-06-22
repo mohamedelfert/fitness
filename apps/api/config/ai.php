@@ -43,6 +43,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Plan-adjustment proposals (FR-AI-006)
+    |--------------------------------------------------------------------------
+    | Reviews a current program and proposes safe incremental changes. `strong`
+    | tier — adjustments reason over the whole program's progression, closer to
+    | full-plan generation than a single swap. Same reject-and-regenerate safety
+    | loop; persists nothing (proposals the member applies later).
+    */
+    'plan_adjustment' => [
+        'tier' => 'strong',
+        'max_attempts' => 2,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Cost meter (NFR-AI-001 / NFR-OPS-002)
     |--------------------------------------------------------------------------
     | Micro-USD per 1,000 tokens, keyed by provider model id. Feeds cost_micros
@@ -70,6 +84,7 @@ return [
         'program' => 1,
         'meal_plan' => 1,
         'exercise_alternatives' => 1,
+        'plan_adjustment' => 1,
         'free_grant' => 10,
     ],
 

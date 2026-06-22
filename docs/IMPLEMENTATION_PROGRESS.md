@@ -90,7 +90,7 @@
 | FR-BIO-*, FR-AN-001/005 | Progress + AI analysis + biometrics + photos + weekly report | ⬜ |
 | FR-BIO-003, FR-AI-005 | Wearables ingest + recovery tips | ⬜ |
 | FR-ENG-001/002/003 | Goals, habits, streaks/XP | ⬜ |
-| FR-AI-003/006/008 | Exercise alternatives, conversational coach, plan-adjust | 🟡 **Exercise alternatives ✅** (`POST /v1/ai/exercise-alternatives`, cheap-tier, contraindication-checked, see AI core row); conversational coach + plan-adjust ⬜. |
+| FR-AI-003/006/008 | Exercise alternatives, plan-adjust, conversational coach | 🟡 **Exercise alternatives ✅** (`POST /v1/ai/exercise-alternatives`, cheap-tier, contraindication-checked, see AI core row). **Plan-adjustment proposals ✅** (`FR-AI-006`, `POST /v1/ai/plan-adjustment`, 12 tests) — reviews a person-owned program (cross-person → **404**), proposes contraindication-checked swaps/progression on the shared `AiGenerator` base, persists nothing (200); empty adjustments = a valid "no changes recommended", metered like the others (`feature=plan_adjustment`). Conversational coach (`FR-AI-008`) ⬜. |
 | FR-SAS-002/003/004 | B2C billing + credits + payments | 🟡 **AICredit wallet/ledger + meter debit ✅** (FR-SAS-004, in AI core above); plans/subscriptions/trials, PSP payments, and credit top-up still ⬜. |
 | NFR-UX-003, NFR-UX-001 | i18n/RTL hardening + a11y pass | ⬜ |
 | **P1 GATE** | Retention/North-Star/AI-acceptance/margin/conversion criteria | ⬜ |
