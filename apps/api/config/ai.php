@@ -57,6 +57,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Daily recommendation (FR-AI-004)
+    |--------------------------------------------------------------------------
+    | A short advisory nudge — `cheap` tier (a motivational line needs no full-plan
+    | reasoning). No safety sandwich (it prescribes no library entities; safety is by
+    | construction — the prompt forbids specific prescriptions), so no max_attempts loop.
+    | Materialised once per Person per day; a same-day refresh is served from cache.
+    */
+    'daily_recommendation' => [
+        'tier' => 'cheap',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Cost meter (NFR-AI-001 / NFR-OPS-002)
     |--------------------------------------------------------------------------
     | Micro-USD per 1,000 tokens, keyed by provider model id. Feeds cost_micros
@@ -85,6 +98,7 @@ return [
         'meal_plan' => 1,
         'exercise_alternatives' => 1,
         'plan_adjustment' => 1,
+        'daily_recommendation' => 1,
         'free_grant' => 10,
     ],
 

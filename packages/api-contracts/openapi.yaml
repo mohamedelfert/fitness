@@ -210,6 +210,23 @@ paths:
         '404': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
 
+  /ai/recommendations/today:
+    get:
+      summary: Today's AI recommendation (FR-AI-004) — advisory daily nudge, materialised once per day
+      description: >
+        Returns the Person's short advisory recommendation for today (motivation / behavioural
+        nudge). Advisory-only — it prescribes no exercises or medical advice, so no contraindication
+        sandwich applies. Materialised once per day: the first request of the day generates and
+        debits one AICredit; later requests the same day return the cached line for free. Requires
+        the `ai-plan.generate` gate (→ 403) and completed onboarding (→ 422); a miss with an
+        unfunded wallet is 402.
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/DailyRecommendationEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '402': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
   /sessions:
     post:
       summary: Start a training Session (idempotent)
@@ -663,6 +680,15 @@ components:
       type: object
       properties:
         data: { $ref: '#/components/schemas/PlanAdjustments' }
+    DailyRecommendation:
+      type: object
+      properties:
+        date: { type: string, format: date }
+        message: { type: string, description: short advisory recommendation for the day }
+    DailyRecommendationEnvelope:
+      type: object
+      properties:
+        data: { $ref: '#/components/schemas/DailyRecommendation' }
     SessionCreate:
       type: object
       properties:
