@@ -277,6 +277,33 @@ paths:
         '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/BiometricsEnvelope' } } } }
         '401': { $ref: '#/components/responses/Problem' }
 
+  /wearables/ingest:
+    post:
+      summary: Ingest a batch of wearable readings (FR-BIO-003) — append-only, idempotent per reading
+      description: >
+        Accepts a batch of device readings (steps/HR/sleep/HRV) and appends them to the Person's
+        wearable_streams. Idempotent per reading on client_ulid (duplicates are skipped, reported
+        in `skipped`). The Apple Health / Health Connect connectors are client-side; this is the
+        server-side sink.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/WearableIngest' }
+      responses:
+        '201': { description: ingested, content: { application/json: { schema: { $ref: '#/components/schemas/WearableIngestResultEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
+  /wearables:
+    get:
+      summary: List the Person's wearable readings (FR-BIO-003), newest first, optionally by metric
+      parameters:
+        - { name: metric, in: query, required: false, schema: { type: string, enum: [hr, hrv, sleep, steps] } }
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/WearableStreamsEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+
   /sessions:
     post:
       summary: Start a training Session (idempotent)
@@ -788,6 +815,41 @@ components:
       type: object
       properties:
         data: { type: array, items: { $ref: '#/components/schemas/Biometric' } }
+    WearableReading:
+      type: object
+      required: [metric, value, recorded_at]
+      properties:
+        metric: { type: string, enum: [hr, hrv, sleep, steps] }
+        value: { type: number }
+        recorded_at: { type: string, format: date-time }
+        source: { type: string, nullable: true, description: 'apple_health | health_connect | manual' }
+        client_ulid: { type: string, nullable: true, description: idempotency key for offline sync }
+    WearableIngest:
+      type: object
+      required: [readings]
+      properties:
+        readings: { type: array, minItems: 1, maxItems: 1000, items: { $ref: '#/components/schemas/WearableReading' } }
+    WearableIngestResult:
+      type: object
+      properties:
+        ingested: { type: integer }
+        skipped: { type: integer, description: duplicates skipped by client_ulid }
+    WearableIngestResultEnvelope:
+      type: object
+      properties:
+        data: { $ref: '#/components/schemas/WearableIngestResult' }
+    WearableStream:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/Ulid' }
+        source: { type: string, nullable: true }
+        metric: { type: string }
+        value: { type: number }
+        recorded_at: { type: string, format: date-time }
+    WearableStreamsEnvelope:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/WearableStream' } }
     SessionCreate:
       type: object
       properties:

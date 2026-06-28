@@ -67,7 +67,7 @@ Cross-cutting workstreams run **every** phase (see `EXECUTION_PLAN.md §9` and t
 
 ### E1.5 — Body, progress & wearables  🟡
 - Biometrics (weight/bodyfat/measurements) `FR-BIO-001` ✅ — `Biometrics` module, append-only idempotent `biometrics` log, `POST`/`GET /v1/biometrics` (TDD, 7 tests); progress photos (encrypted, signed URLs) `FR-BIO-002` ⬜ (needs object storage — Terraform S3 baseline exists but nothing applied).
-- Wearable ingest: Apple Health / Health Connect (steps/HR/sleep/HRV) `FR-BIO-003`; recovery-aware tips `FR-AI-005`.
+- Wearable ingest: Apple Health / Health Connect (steps/HR/sleep/HRV) `FR-BIO-003` ✅ — `Wearables` module, batch `POST /v1/wearables/ingest` (append-only, per-reading idempotent, one SELECT + bulk INSERT) + `GET /v1/wearables` (TDD, 7 tests); connectors are client-side, `connect` OAuth handshake deferred. Recovery-aware tips `FR-AI-005` ⬜ (consumes wearable data + the AI sandwich).
 
 ### E1.6 — AI Brain core  🔒 (gated by E1.1 safety gate; needs Q5/Q7)
 - `LlmGateway` interface + Claude-primary + fallback (ADR-004); model tiering & caching (`NFR-AI-001`).
