@@ -1,7 +1,7 @@
 # IMPLEMENTATION_PROGRESS.md
 ### Fitness OS — Living Progress Tracker
 
-> **Status:** Active · **Owner:** Eng/Product Leadership · **Last updated:** 2026-06-19
+> **Status:** Active · **Owner:** Eng/Product Leadership · **Last updated:** 2026-06-28
 > **Document 10 of 10.** The single source of truth for *where we are*. Updated continuously — `BLUEPRINT.md §10` makes "update this file" part of the Definition of Done. Legend: ✅ done · 🟡 in progress · ⬜ not started · 🚫 blocked.
 
 ---
@@ -91,7 +91,7 @@
 | FR-BIO-003, FR-AI-005 | Wearables ingest + recovery tips | ⬜ |
 | FR-ENG-001/002/003 | Goals, habits, streaks/XP | ⬜ |
 | FR-AI-003/006/008 | Exercise alternatives, plan-adjust, conversational coach | 🟡 **Exercise alternatives ✅** (`POST /v1/ai/exercise-alternatives`, cheap-tier, contraindication-checked, see AI core row). **Plan-adjustment proposals ✅** (`FR-AI-006`, `POST /v1/ai/plan-adjustment`, 12 tests) — reviews a person-owned program (cross-person → **404**), proposes contraindication-checked swaps/progression on the shared `AiGenerator` base, persists nothing (200); empty adjustments = a valid "no changes recommended", metered like the others (`feature=plan_adjustment`). **Daily recommendation ✅** (`FR-AI-004`, `GET /v1/ai/recommendations/today`, 8 tests) — advisory daily nudge; deliberately NOT on the safety-sandwich base (prescribes no library entities → nothing to scan; safety by construction via the prompt), materialised once per person/day (`daily_recommendations`, unique person+date) so a same-day refresh is cache-served and not recharged. Conversational coach (`FR-AI-008`) ⬜. |
-| FR-SAS-002/003/004 | B2C billing + credits + payments | 🟡 **AICredit wallet/ledger + meter debit ✅** (FR-SAS-004, in AI core above); plans/subscriptions/trials, PSP payments, and credit top-up still ⬜. |
+| FR-SAS-002/003/004 | B2C billing + credits + payments | 🟡 **AICredit wallet/ledger + meter debit ✅** (FR-SAS-004, in AI core above); **free starter grant on onboarding completion ✅** (3 tests) — Identity fires `OnboardingCompleted` (only on the true transition), AiOrchestration's best-effort `GrantFreeAiCredits` listener grants `ai.credits.free_grant` once (idempotent via the ledger). Plans/subscriptions/trials, PSP payments, and credit top-up still ⬜. |
 | NFR-UX-003, NFR-UX-001 | i18n/RTL hardening + a11y pass | ⬜ |
 | **P1 GATE** | Retention/North-Star/AI-acceptance/margin/conversion criteria | ⬜ |
 

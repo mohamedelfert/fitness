@@ -9,6 +9,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Modules\Engagement\Models\Goal;
+use Modules\Identity\Events\OnboardingCompleted;
 use Modules\Identity\Support\AiInputProfile;
 use Modules\Identity\Support\OnboardingProfile;
 
@@ -35,6 +36,7 @@ class OnboardingController extends Controller
         ]);
 
         $person = $request->user();
+        $wasComplete = $person->isOnboardingComplete();
 
         DB::transaction(function () use ($person, $validated) {
             $basics = Arr::only($validated, ['sex', 'dob', 'height_cm']);
@@ -54,6 +56,11 @@ class OnboardingController extends Controller
                 );
             }
         });
+
+        // Only on the real incomplete→complete transition — re-submits (retry/edit) don't re-fire.
+        if (! $wasComplete) {
+            OnboardingCompleted::dispatch($person);
+        }
 
         return response()->json(['data' => [
             'onboarding_completed' => true,
