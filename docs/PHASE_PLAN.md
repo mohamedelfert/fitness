@@ -65,8 +65,8 @@ Cross-cutting workstreams run **every** phase (see `EXECUTION_PLAN.md §9` and t
 - **Meal plan read model** ✅ (`FR-AI-002`) — TDD, 4 tests: `meal_plans → meal_plan_days → meal_plan_items` tables/models/factories; `GET /v1/meal-plans`, `GET /v1/meal-plans/{id}` (nested days→items, person-scoped, cross-person→404). Nutrition analog of programs; **AI generation (E1.6) populates it.** Recipes/custom foods (`FR-NUT-009`) ⬜.
 - AI food-image recognition (`FR-NUT-004`) + voice logging (`FR-NUT-005`) — buy/partner vision initially. ⬜
 
-### E1.5 — Body, progress & wearables  ⬜
-- Biometrics (weight/bodyfat/measurements) `FR-BIO-001`; progress photos (encrypted, signed URLs) `FR-BIO-002`.
+### E1.5 — Body, progress & wearables  🟡
+- Biometrics (weight/bodyfat/measurements) `FR-BIO-001` ✅ — `Biometrics` module, append-only idempotent `biometrics` log, `POST`/`GET /v1/biometrics` (TDD, 7 tests); progress photos (encrypted, signed URLs) `FR-BIO-002` ⬜ (needs object storage — Terraform S3 baseline exists but nothing applied).
 - Wearable ingest: Apple Health / Health Connect (steps/HR/sleep/HRV) `FR-BIO-003`; recovery-aware tips `FR-AI-005`.
 
 ### E1.6 — AI Brain core  🔒 (gated by E1.1 safety gate; needs Q5/Q7)

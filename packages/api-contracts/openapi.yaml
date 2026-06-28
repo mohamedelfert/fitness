@@ -256,6 +256,27 @@ paths:
         '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/CoachMessagesEnvelope' } } } }
         '401': { $ref: '#/components/responses/Problem' }
 
+  /biometrics:
+    post:
+      summary: Log a body measurement (FR-BIO-001) — append-only, idempotent on client_ulid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BiometricCreate' }
+      responses:
+        '201': { description: created, content: { application/json: { schema: { $ref: '#/components/schemas/BiometricEnvelope' } } } }
+        '200': { description: idempotent replay (returns original), content: { application/json: { schema: { $ref: '#/components/schemas/BiometricEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+    get:
+      summary: List the Person's biometrics (FR-BIO-001), newest first, optionally filtered by type
+      parameters:
+        - { name: type, in: query, required: false, schema: { type: string, enum: [weight, body_fat, waist, hip, chest, arm, thigh, neck] } }
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/BiometricsEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+
   /sessions:
     post:
       summary: Start a training Session (idempotent)
@@ -742,6 +763,31 @@ components:
       type: object
       properties:
         data: { type: array, items: { $ref: '#/components/schemas/CoachMessage' } }
+    BiometricCreate:
+      type: object
+      required: [type, value, unit]
+      properties:
+        type: { type: string, enum: [weight, body_fat, waist, hip, chest, arm, thigh, neck] }
+        value: { type: number }
+        unit: { type: string, maxLength: 16, description: 'kg | lb | % | cm | in' }
+        client_ulid: { type: string, nullable: true, description: idempotency key for offline sync }
+        measured_at: { type: string, format: date-time, nullable: true }
+    Biometric:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/Ulid' }
+        type: { type: string }
+        value: { type: number }
+        unit: { type: string }
+        measured_at: { type: string, format: date-time }
+    BiometricEnvelope:
+      type: object
+      properties:
+        data: { $ref: '#/components/schemas/Biometric' }
+    BiometricsEnvelope:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Biometric' } }
     SessionCreate:
       type: object
       properties:
