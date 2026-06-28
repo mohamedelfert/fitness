@@ -70,6 +70,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Conversational coach (FR-AI-008)
+    |--------------------------------------------------------------------------
+    | A multi-turn chat grounded in the Person's profile. `default` tier — coaching
+    | quality is the retention thesis, not a throwaway line (revisit vs cost when Q5
+    | pricing lands). No safety sandwich (prescribes no library entities; safety is by
+    | construction via the prompt). `history_limit` caps how many recent turns are
+    | replayed into the prompt — the cost guardrail on an unbounded conversation
+    | (NFR-AI-001). Streaming (SSE) is deferred to the real adapter.
+    */
+    'coach_chat' => [
+        'tier' => 'default',
+        'history_limit' => 10,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Cost meter (NFR-AI-001 / NFR-OPS-002)
     |--------------------------------------------------------------------------
     | Micro-USD per 1,000 tokens, keyed by provider model id. Feeds cost_micros
@@ -99,6 +115,7 @@ return [
         'exercise_alternatives' => 1,
         'plan_adjustment' => 1,
         'daily_recommendation' => 1,
+        'coach_chat' => 1,
         'free_grant' => 10,
     ],
 

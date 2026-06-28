@@ -227,6 +227,35 @@ paths:
         '403': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
 
+  /ai/coach/chat:
+    post:
+      summary: Conversational AI coach (FR-AI-008) — send a message, grounded in the Person's profile
+      description: >
+        Sends a message to the AI coach and returns its reply. A multi-turn chat persisted as one
+        implicit thread per person; recent turns are replayed for context. Advisory-only — it
+        prescribes no exercises or medical advice (safety by construction), so no contraindication
+        sandwich applies. Requires the `ai-plan.generate` gate (→ 403) and completed onboarding
+        (→ 422). Each message debits one AICredit, only on a successful reply (402 if unfunded);
+        unusable model output is 422. Streaming (SSE) is planned but not yet exposed. The reply
+        envelope is partial pending the real adapter (Q5): the API_SPECIFICATION response contract
+        also names `confidence`/`grounding`, which arrive with the real model + richer RAG.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CoachChatRequest' }
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/CoachChatReplyEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '402': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+    get:
+      summary: Coach conversation transcript (FR-AI-008) — the Person's chat history in order
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/CoachMessagesEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+
   /sessions:
     post:
       summary: Start a training Session (idempotent)
@@ -689,6 +718,30 @@ components:
       type: object
       properties:
         data: { $ref: '#/components/schemas/DailyRecommendation' }
+    CoachChatRequest:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string, description: the athlete's message to the coach }
+    CoachChatReply:
+      type: object
+      properties:
+        reply: { type: string, description: the coach's reply }
+        interaction_id: { $ref: '#/components/schemas/Ulid' }
+    CoachChatReplyEnvelope:
+      type: object
+      properties:
+        data: { $ref: '#/components/schemas/CoachChatReply' }
+    CoachMessage:
+      type: object
+      properties:
+        role: { type: string, enum: [user, assistant] }
+        content: { type: string }
+        at: { type: string, format: date-time }
+    CoachMessagesEnvelope:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/CoachMessage' } }
     SessionCreate:
       type: object
       properties:

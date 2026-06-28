@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\AiOrchestration\Http\AiCreditController;
+use Modules\AiOrchestration\Http\CoachChatController;
 use Modules\AiOrchestration\Http\DailyRecommendationController;
 use Modules\AiOrchestration\Http\ExerciseAlternativeController;
 use Modules\AiOrchestration\Http\MealPlanGenerationController;
@@ -15,5 +16,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('ai/exercise-alternatives', [ExerciseAlternativeController::class, 'store']);
     Route::post('ai/plan-adjustment', [PlanAdjustmentController::class, 'store']);
     Route::get('ai/recommendations/today', [DailyRecommendationController::class, 'today']);
+    Route::post('ai/coach/chat', [CoachChatController::class, 'store']);
+    Route::get('ai/coach/chat', [CoachChatController::class, 'history']);
     Route::get('me/ai-credits', [AiCreditController::class, 'show']);
 });
