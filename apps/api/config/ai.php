@@ -86,6 +86,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Recovery tips (FR-AI-005)
+    |--------------------------------------------------------------------------
+    | Advisory recovery readout from recent wearable signals + soreness — `cheap` tier (a short
+    | guidance line). No safety sandwich (prescribes no library entities; safety by construction
+    | via the prompt). Generated fresh each call (reflects live data); cost bounded by metering,
+    | not caching.
+    */
+    'recovery' => [
+        'tier' => 'cheap',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Cost meter (NFR-AI-001 / NFR-OPS-002)
     |--------------------------------------------------------------------------
     | Micro-USD per 1,000 tokens, keyed by provider model id. Feeds cost_micros
@@ -116,6 +129,7 @@ return [
         'plan_adjustment' => 1,
         'daily_recommendation' => 1,
         'coach_chat' => 1,
+        'recovery' => 1,
         'free_grant' => 10,
     ],
 

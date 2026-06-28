@@ -8,6 +8,7 @@ use Modules\AiOrchestration\Http\ExerciseAlternativeController;
 use Modules\AiOrchestration\Http\MealPlanGenerationController;
 use Modules\AiOrchestration\Http\PlanAdjustmentController;
 use Modules\AiOrchestration\Http\ProgramGenerationController;
+use Modules\AiOrchestration\Http\RecoveryController;
 
 // Registered under /v1 with the `api` group by ModuleServiceProvider.
 Route::middleware('auth:sanctum')->group(function () {
@@ -16,6 +17,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('ai/exercise-alternatives', [ExerciseAlternativeController::class, 'store']);
     Route::post('ai/plan-adjustment', [PlanAdjustmentController::class, 'store']);
     Route::get('ai/recommendations/today', [DailyRecommendationController::class, 'today']);
+    Route::get('ai/recovery', [RecoveryController::class, 'show']);
     Route::post('ai/coach/chat', [CoachChatController::class, 'store']);
     Route::get('ai/coach/chat', [CoachChatController::class, 'history']);
     Route::get('me/ai-credits', [AiCreditController::class, 'show']);
