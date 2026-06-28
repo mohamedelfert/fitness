@@ -6,7 +6,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 use Modules\AiOrchestration\Contracts\LlmGateway;
 use Modules\AiOrchestration\Contracts\SafetyScanner;
-use Modules\AiOrchestration\Models\AiInteraction;
 use Modules\AiOrchestration\Support\LlmRequest;
 use Modules\AiOrchestration\Support\LlmResult;
 use Modules\Identity\Models\Person;
@@ -30,10 +29,15 @@ use Modules\Identity\Models\Person;
  */
 abstract class AiGenerator
 {
+    private readonly AiInteractionLogger $logger;
+
     public function __construct(
         protected readonly LlmGateway $gateway,
         protected readonly SafetyScanner $scanner,
-    ) {}
+    ) {
+        // Stateless, no deps — newing it here avoids threading a 3rd arg through every subclass ctor.
+        $this->logger = new AiInteractionLogger;
+    }
 
     /**
      * Drive the safety sandwich and return whatever finalize() produces.
@@ -121,27 +125,6 @@ abstract class AiGenerator
 
     private function log(Person $person, LlmResult $result, string $verdict, int $latencyMs, string $tier): void
     {
-        AiInteraction::create([
-            'person_id' => $person->id,
-            'feature' => $this->feature(),
-            'model' => $result->model,
-            'tier' => $tier,
-            'tokens_in' => $result->tokensIn,
-            'tokens_out' => $result->tokensOut,
-            'cost_micros' => $this->costMicros($result),
-            'latency_ms' => $latencyMs,
-            'safety_verdict' => $verdict,
-        ]);
-    }
-
-    /** Cost in integer micro-USD (INV-006). Unknown/stub models price at 0 until Q5. */
-    private function costMicros(LlmResult $result): int
-    {
-        $rates = config('ai.pricing.'.$result->model, config('ai.pricing.default'));
-
-        return (int) round(
-            $result->tokensIn / 1000 * ($rates['in'] ?? 0)
-            + $result->tokensOut / 1000 * ($rates['out'] ?? 0)
-        );
+        $this->logger->log($person, $this->feature(), $result, $verdict, $latencyMs, $tier);
     }
 }

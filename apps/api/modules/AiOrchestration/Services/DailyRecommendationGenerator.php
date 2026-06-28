@@ -4,7 +4,6 @@ namespace Modules\AiOrchestration\Services;
 
 use Illuminate\Validation\ValidationException;
 use Modules\AiOrchestration\Contracts\LlmGateway;
-use Modules\AiOrchestration\Models\AiInteraction;
 use Modules\AiOrchestration\Models\DailyRecommendation;
 use Modules\AiOrchestration\Support\LlmRequest;
 use Modules\AiOrchestration\Support\LlmResult;
@@ -23,7 +22,10 @@ use Modules\Identity\Support\AiInputProfile;
  */
 class DailyRecommendationGenerator
 {
-    public function __construct(private readonly LlmGateway $gateway) {}
+    public function __construct(
+        private readonly LlmGateway $gateway,
+        private readonly AiInteractionLogger $logger,
+    ) {}
 
     /** Generate and persist the recommendation for `$date` (Y-m-d). Throws 422 on unusable output. */
     public function generate(Person $person, string $date): DailyRecommendation
@@ -89,26 +91,8 @@ class DailyRecommendationGenerator
         );
     }
 
-    // ponytail: cost+log mirrors AiGenerator (2nd copy, rule-of-three). Extract an
-    // AiInteractionLogger if a 3rd non-base caller appears.
     private function log(Person $person, LlmResult $result, string $verdict, int $latencyMs, string $tier): void
     {
-        $rates = config('ai.pricing.'.$result->model, config('ai.pricing.default'));
-        $costMicros = (int) round(
-            $result->tokensIn / 1000 * ($rates['in'] ?? 0)
-            + $result->tokensOut / 1000 * ($rates['out'] ?? 0)
-        );
-
-        AiInteraction::create([
-            'person_id' => $person->id,
-            'feature' => 'daily_recommendation',
-            'model' => $result->model,
-            'tier' => $tier,
-            'tokens_in' => $result->tokensIn,
-            'tokens_out' => $result->tokensOut,
-            'cost_micros' => $costMicros,
-            'latency_ms' => $latencyMs,
-            'safety_verdict' => $verdict,
-        ]);
+        $this->logger->log($person, 'daily_recommendation', $result, $verdict, $latencyMs, $tier);
     }
 }
