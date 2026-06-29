@@ -123,6 +123,14 @@ paths:
         '404': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
 
+  /me/gamification:
+    get:
+      summary: XP / level / streak (FR-ENG-003)
+      description: Computed on read from append-only activity (sessions + habit logs); monotonic. Badges deferred.
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/GamificationEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+
   /exercises:
     get:
       summary: Exercise library (search/filter, localized via Accept-Language) — FR-TRN-001/006
@@ -740,6 +748,17 @@ components:
             id: { $ref: '#/components/schemas/Ulid' }
             habit_id: { $ref: '#/components/schemas/Ulid' }
             logged_at: { type: string, format: date-time, nullable: true }
+    GamificationEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            xp: { type: integer }
+            level: { type: integer }
+            xp_into_level: { type: integer }
+            xp_for_next_level: { type: integer }
+            streak_days: { type: integer }
     Exercise:
       type: object
       properties:
