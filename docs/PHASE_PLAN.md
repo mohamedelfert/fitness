@@ -82,8 +82,8 @@ Cross-cutting workstreams run **every** phase (see `EXECUTION_PLAN.md §9` and t
 ### E1.7 — AI analytics  ✅
 - Progress analysis + goal projection (`FR-AN-001`) ✅; adherence analytics (`FR-AN-002`) ✅; weekly report (`FR-AN-005`) ✅. New **Analytics** module owns progress + adherence (pure compute); the weekly report is an advisory AI surface in AiOrchestration grounded on both. **Computed on read** rather than the prescribed async read-models: per-person point queries are cheap (the nutrition-summary precedent), and DATABASE_DESIGN §3.5's "never inline" rule is bolted to population-scale scoring (`engagement_scores`/`churn_risk`), not these. The weekly report IS materialised (once per ISO week) since it carries an LLM cost. `ponytail:` materialise+queue progress/adherence only if a person's history grows large enough to hurt.
 
-### E1.8 — Engagement  ⬜
-- Goals tracking (`FR-ENG-001`); habits + behavioral nudges (`FR-ENG-002`); XP/levels/badges/streaks (`FR-ENG-003`); smart notifications, per-user learned timing (`FR-ENG-006`).
+### E1.8 — Engagement  🟡
+- Goals tracking (`FR-ENG-001`) ✅ — create/list/projected-attainment (E1.7) + manual close (`PATCH /v1/goals/{id}`). Habits (`FR-ENG-002`) 🟡 — `habits` + append-only `habit_logs`, `GET/POST /v1/habits` (with `current_streak`) + `POST /v1/habit-logs`; **behavioural nudge deferred** (advisory-AI surface). XP/levels/streaks (`FR-ENG-003`) ✅ — `GET /v1/me/gamification`, derived on read from append-only activity (sessions + habit logs); **badges deferred** (historical award → persist in `person_badges`, own slice); streak math extracted to `App\Support\DayStreak`. Smart notifications (`FR-ENG-006`) ⬜ — **blocked on push infra** (device tokens + FCM/APNs), same class as progress-photos / wearables-connect.
 
 ### E1.9 — SaaS billing (B2C)  ⬜
 - Plans (free/premium) + AICredits (`FR-SAS-002`); subscriptions, trials, coupons, upgrade/downgrade+proration (`FR-SAS-003`); payments via **regional PSP** (Q3) + credit top-up.
