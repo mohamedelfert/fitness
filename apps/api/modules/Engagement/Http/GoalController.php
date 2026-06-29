@@ -39,6 +39,28 @@ class GoalController extends Controller
         return response()->json(['data' => $this->shape($goal)], 201);
     }
 
+    /**
+     * PATCH /v1/goals/{id} — update a goal (manual close via status, or edit targets). Person-owned,
+     * so an unknown/cross-person id is a 404. ponytail: auto-achievement (closing a goal when a
+     * biometric crosses the target) is deliberately NOT here — it needs a trigger on every write.
+     */
+    public function update(Request $request, string $id): JsonResponse
+    {
+        $goal = Goal::where('person_id', $request->user()->id)->find($id);
+        abort_if($goal === null, 404);
+
+        $validated = $request->validate([
+            'status' => ['sometimes', Rule::in(Goal::STATUSES)],
+            'target_value' => ['sometimes', 'nullable', 'numeric'],
+            'target_unit' => ['sometimes', 'nullable', 'string', 'max:16'],
+            'target_date' => ['sometimes', 'nullable', 'date'],
+        ]);
+
+        $goal->update($validated);
+
+        return response()->json(['data' => $this->shape($goal)]);
+    }
+
     private function shape(Goal $g): array
     {
         return [

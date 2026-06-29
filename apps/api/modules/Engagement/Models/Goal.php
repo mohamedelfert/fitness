@@ -22,6 +22,9 @@ class Goal extends Model
         'body_recomposition', 'general_health',
     ];
 
+    /** Lifecycle states. Closing a goal (achieved/abandoned) is a manual action. */
+    public const STATUSES = ['active', 'achieved', 'abandoned'];
+
     protected $fillable = [
         'person_id', 'type', 'target_value', 'target_unit', 'target_date', 'status',
     ];

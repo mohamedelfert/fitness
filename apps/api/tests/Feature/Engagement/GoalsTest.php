@@ -67,4 +67,35 @@ class GoalsTest extends TestCase
         $this->getJson('/v1/goals')->assertUnauthorized();
         $this->postJson('/v1/goals', ['type' => 'fat_loss'])->assertUnauthorized();
     }
+
+    public function test_person_can_close_a_goal(): void
+    {
+        $person = Person::factory()->create();
+        $goal = Goal::factory()->for($person, 'person')->create(['status' => 'active']);
+        Sanctum::actingAs($person);
+
+        $this->patchJson("/v1/goals/{$goal->id}", ['status' => 'achieved'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'achieved');
+
+        $this->assertDatabaseHas('goals', ['id' => $goal->id, 'status' => 'achieved']);
+    }
+
+    public function test_updating_a_goal_status_must_be_in_the_vocabulary(): void
+    {
+        $person = Person::factory()->create();
+        $goal = Goal::factory()->for($person, 'person')->create(['status' => 'active']);
+        Sanctum::actingAs($person);
+
+        $this->patchJson("/v1/goals/{$goal->id}", ['status' => 'vanquished'])->assertStatus(422);
+    }
+
+    public function test_cannot_update_another_persons_goal(): void
+    {
+        $other = Person::factory()->create();
+        $goal = Goal::factory()->for($other, 'person')->create(['status' => 'active']);
+        Sanctum::actingAs(Person::factory()->create());
+
+        $this->patchJson("/v1/goals/{$goal->id}", ['status' => 'achieved'])->assertNotFound();
+    }
 }

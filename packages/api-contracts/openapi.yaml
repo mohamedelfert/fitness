@@ -90,6 +90,22 @@ paths:
         '401': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
 
+  /goals/{goalId}:
+    patch:
+      summary: Update a goal — manual close (status) or edit targets (FR-ENG-001)
+      parameters:
+        - { name: goalId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GoalUpdate' }
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/GoalEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
   /habits:
     get:
       summary: The Person's habits, each with its current streak (FR-ENG-002)
@@ -705,6 +721,13 @@ components:
       required: [type]
       properties:
         type: { type: string, enum: [fat_loss, muscle_gain, strength, endurance, body_recomposition, general_health] }
+        target_value: { type: number, nullable: true }
+        target_unit: { type: string, maxLength: 16, nullable: true }
+        target_date: { type: string, format: date, nullable: true }
+    GoalUpdate:
+      type: object
+      properties:
+        status: { type: string, enum: [active, achieved, abandoned] }
         target_value: { type: number, nullable: true }
         target_unit: { type: string, maxLength: 16, nullable: true }
         target_date: { type: string, format: date, nullable: true }

@@ -10,6 +10,7 @@ use Modules\Engagement\Http\HabitLogController;
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('goals', [GoalController::class, 'index']);
     Route::post('goals', [GoalController::class, 'store']);
+    Route::patch('goals/{id}', [GoalController::class, 'update']);
     Route::get('habits', [HabitController::class, 'index']);
     Route::post('habits', [HabitController::class, 'store']);
     Route::post('habit-logs', [HabitLogController::class, 'store']);
