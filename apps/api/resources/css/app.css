@@ -13,7 +13,15 @@
 
 /* Map the semantic tokens onto Tailwind v4 utilities. `inline` keeps the var() reference in each
    generated utility (e.g. .bg-bg-base { background: var(--color-bg-base) }) so flipping the
-   <html> class to .theme-light re-themes everything at runtime — no rebuild. */
+   <html> class to .theme-light re-themes everything at runtime — no rebuild.
+
+   ⚠ UNVERIFIED HERE — no node_modules / no net in this env, so the asset build never ran. The
+   first CI `npm install && npm run build` is the gate. Two things to confirm there (each FAILS the
+   build, not just mis-themes, if wrong): (a) the cross-package @import above resolves under
+   `vite build`; (b) this self-named mapping (theme key == source var name) compiles. If (b) trips
+   a circular-ref, switch to distinct names, e.g. `--color-base: var(--color-bg-base)` (utility
+   becomes `bg-base`) and rename the utilities in resources/views/livewire/**. Check the emitted
+   CSS actually resolves `bg-bg-base`/`text-text-primary` to token hex — not just that build exits 0. */
 @theme inline {
     --color-bg-base: var(--color-bg-base);
     --color-bg-surface: var(--color-bg-surface);

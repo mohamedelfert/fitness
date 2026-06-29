@@ -11,6 +11,11 @@ export default defineConfig({
         tailwindcss(),
     ],
     server: {
+        // Allow importing packages/design-tokens across the monorepo (dev server only;
+        // `vite build` resolves the relative @import without this).
+        fs: {
+            allow: ['.', '../../..'],
+        },
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },
