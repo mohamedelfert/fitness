@@ -99,6 +99,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Habit nudge (FR-ENG-002)
+    |--------------------------------------------------------------------------
+    | Advisory behavioural nudge grounded in the Person's habits + streaks — `cheap` tier (a short
+    | line). No safety sandwich (prescribes no library entities; safety by construction via the
+    | prompt). Generated fresh each call (habit state changes intraday); cost bounded by metering.
+    */
+    'habit_nudge' => [
+        'tier' => 'cheap',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Weekly report (FR-AN-005)
     |--------------------------------------------------------------------------
     | An advisory weekly narrative grounded in the Person's progress + adherence read-models.
@@ -144,6 +156,7 @@ return [
         'coach_chat' => 1,
         'recovery' => 1,
         'weekly_report' => 1,
+        'habit_nudge' => 1,
         'free_grant' => 10,
     ],
 

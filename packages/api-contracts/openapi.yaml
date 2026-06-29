@@ -303,6 +303,22 @@ paths:
         '403': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
 
+  /ai/habit-nudge:
+    get:
+      summary: AI habit nudge (FR-ENG-002) — advisory behavioural nudge from habits + streaks
+      description: >
+        Returns one short behavioural nudge grounded in the Person's active habits, each habit's
+        streak and whether it's been logged today. Advisory-only (safety by construction), no
+        contraindication sandwich. Fresh each call, charged one AICredit (402 if unfunded);
+        unusable model output is 422. Requires the `ai-plan.generate` gate (→ 403) and completed
+        onboarding (→ 422).
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/HabitNudgeEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '402': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
   /ai/coach/chat:
     post:
       summary: Conversational AI coach (FR-AI-008) — send a message, grounded in the Person's profile
@@ -945,6 +961,15 @@ components:
       type: object
       properties:
         data: { $ref: '#/components/schemas/RecoveryTip' }
+    HabitNudge:
+      type: object
+      properties:
+        message: { type: string, description: short advisory behavioural nudge }
+        interaction_id: { $ref: '#/components/schemas/Ulid' }
+    HabitNudgeEnvelope:
+      type: object
+      properties:
+        data: { $ref: '#/components/schemas/HabitNudge' }
     CoachChatRequest:
       type: object
       required: [message]
