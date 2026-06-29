@@ -476,6 +476,14 @@ paths:
         '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/NutritionSummaryEnvelope' } } } }
         '401': { $ref: '#/components/responses/Problem' }
 
+  /me/progress:
+    get:
+      summary: Trend analysis + goal projection (FR-AN-001)
+      description: Per-metric trend over a window plus a per-goal projection (unit-driven; computed on read).
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/ProgressEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+
   /meal-plans:
     get:
       summary: The Person's meal plans (FR-AI-002)
@@ -980,6 +988,44 @@ components:
             fat: { type: number }
             water_ml: { type: integer }
             entries: { type: integer }
+    ProgressEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            window_days: { type: integer }
+            metrics:
+              type: array
+              items:
+                type: object
+                properties:
+                  type: { type: string }
+                  unit: { type: string }
+                  first: { type: number }
+                  latest: { type: number }
+                  change: { type: number }
+                  trend_per_week: { type: number, nullable: true }
+                  samples: { type: integer }
+            goals:
+              type: array
+              items:
+                type: object
+                properties:
+                  goal_id: { $ref: '#/components/schemas/Ulid' }
+                  type: { type: string }
+                  target_value: { type: number, nullable: true }
+                  target_unit: { type: string, nullable: true }
+                  target_date: { type: string, format: date, nullable: true }
+                  projection:
+                    type: object
+                    properties:
+                      status: { type: string, enum: [projected, trend_unfavorable, insufficient_data, no_matching_metric] }
+                      metric: { type: string, nullable: true }
+                      current: { type: number, nullable: true }
+                      trend_per_week: { type: number, nullable: true }
+                      projected_date: { type: string, format: date, nullable: true }
+                      on_track: { type: boolean, nullable: true }
     MealPlanSummary:
       type: object
       properties:
