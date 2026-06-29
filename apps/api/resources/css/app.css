@@ -1,11 +1,38 @@
 @import 'tailwindcss';
 
+/* Design tokens are the single source of truth (packages/design-tokens — edit tokens.json, run
+   `node build.mjs`). tokens.css defines the dark palette on :root and a .theme-light override.
+   ponytail: cross-package @import; if `vite build` can't resolve it, point design-tokens'
+   build.mjs at this app's resources/css instead of duplicating hex here. */
+@import '../../../../packages/design-tokens/dist/tokens.css';
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+/* Map the semantic tokens onto Tailwind v4 utilities. `inline` keeps the var() reference in each
+   generated utility (e.g. .bg-bg-base { background: var(--color-bg-base) }) so flipping the
+   <html> class to .theme-light re-themes everything at runtime — no rebuild. */
+@theme inline {
+    --color-bg-base: var(--color-bg-base);
+    --color-bg-surface: var(--color-bg-surface);
+    --color-bg-surface-raised: var(--color-bg-surface-raised);
+    --color-border-subtle: var(--color-border-subtle);
+    --color-text-primary: var(--color-text-primary);
+    --color-text-secondary: var(--color-text-secondary);
+    --color-text-muted: var(--color-text-muted);
+    --color-brand-primary: var(--color-brand-primary);
+    --color-brand-primary-press: var(--color-brand-primary-press);
+    --color-accent-electric: var(--color-accent-electric);
+    --color-feedback-success: var(--color-feedback-success);
+    --color-feedback-warning: var(--color-feedback-warning);
+    --color-feedback-danger: var(--color-feedback-danger);
+
+    --radius-sm: var(--radius-sm);
+    --radius-md: var(--radius-md);
+    --radius-lg: var(--radius-lg);
+    --radius-xl: var(--radius-xl);
+
+    --font-sans: var(--font-latin);
 }
