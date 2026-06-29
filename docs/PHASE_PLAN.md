@@ -79,8 +79,8 @@ Cross-cutting workstreams run **every** phase (see `EXECUTION_PLAN.md §9` and t
 - **Decided — MealPlan generation food-grounding** (`FR-AI-002`): chose (a) **library-referenced** — added `slug` + `dietary_tags` to `food_items` so the dietary safety scan is real (mirrors exercise contraindications) and grounding cuts hallucination. (b) free-form-macros was rejected: weaker safety post-eval, which INV-005 makes release-blocking. Open follow-on: dietary *preferences* (vegan/vegetarian) are currently soft grounding hints, not hard blocks — revisit if a preference needs enforcing.
 - **Deferred decision — AICredit funding trigger** (`FR-SAS-004`): wallets currently start empty; production needs an explicit grant. Options: grant `free_grant` on onboarding completion (couples Identity→AiOrchestration, cleanest via an event) vs wait for E1.9 plan grants. Picked B-style stopgap for now (config grant, tests fund explicitly).
 
-### E1.7 — AI analytics  ⬜
-- Progress analysis + goal projection (`FR-AN-001`); adherence analytics (`FR-AN-002`); weekly report (`FR-AN-005`). Computed as async read-models.
+### E1.7 — AI analytics  ✅
+- Progress analysis + goal projection (`FR-AN-001`) ✅; adherence analytics (`FR-AN-002`) ✅; weekly report (`FR-AN-005`) ✅. New **Analytics** module owns progress + adherence (pure compute); the weekly report is an advisory AI surface in AiOrchestration grounded on both. **Computed on read** rather than the prescribed async read-models: per-person point queries are cheap (the nutrition-summary precedent), and DATABASE_DESIGN §3.5's "never inline" rule is bolted to population-scale scoring (`engagement_scores`/`churn_risk`), not these. The weekly report IS materialised (once per ISO week) since it carries an LLM cost. `ponytail:` materialise+queue progress/adherence only if a person's history grows large enough to hurt.
 
 ### E1.8 — Engagement  ⬜
 - Goals tracking (`FR-ENG-001`); habits + behavioral nudges (`FR-ENG-002`); XP/levels/badges/streaks (`FR-ENG-003`); smart notifications, per-user learned timing (`FR-ENG-006`).

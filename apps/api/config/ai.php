@@ -99,6 +99,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Weekly report (FR-AN-005)
+    |--------------------------------------------------------------------------
+    | An advisory weekly narrative grounded in the Person's progress + adherence read-models.
+    | `default` tier — a flagship retention surface, not a throwaway line (revisit vs cost when Q5
+    | pricing lands). No safety sandwich (prescribes no library entities; safety by construction
+    | via the prompt). Materialised once per Person per ISO week; a same-week refresh is cache-served.
+    */
+    'weekly_report' => [
+        'tier' => 'default',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Cost meter (NFR-AI-001 / NFR-OPS-002)
     |--------------------------------------------------------------------------
     | Micro-USD per 1,000 tokens, keyed by provider model id. Feeds cost_micros
@@ -130,6 +143,7 @@ return [
         'daily_recommendation' => 1,
         'coach_chat' => 1,
         'recovery' => 1,
+        'weekly_report' => 1,
         'free_grant' => 10,
     ],
 

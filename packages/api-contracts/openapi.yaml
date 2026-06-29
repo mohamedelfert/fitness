@@ -492,6 +492,17 @@ paths:
         '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/AdherenceEnvelope' } } } }
         '401': { $ref: '#/components/responses/Problem' }
 
+  /me/reports/weekly:
+    get:
+      summary: Weekly AI report (FR-AN-005)
+      description: Advisory weekly narrative grounded in progress + adherence. Materialised once per ISO week; a same-week refresh is cache-served and not recharged.
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/WeeklyReportEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '402': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
   /meal-plans:
     get:
       summary: The Person's meal plans (FR-AI-002)
@@ -1049,6 +1060,15 @@ components:
             program_id: { type: string, nullable: true }
             planned_per_week: { type: integer, nullable: true }
             adherence_pct: { type: number, nullable: true }
+    WeeklyReportEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            iso_week: { type: string, description: 'ISO-8601 year-week, e.g. 2026-W27' }
+            week_start: { type: string, format: date }
+            summary: { type: string }
     MealPlanSummary:
       type: object
       properties:
