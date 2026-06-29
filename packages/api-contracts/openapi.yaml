@@ -782,6 +782,15 @@ components:
             xp_into_level: { type: integer }
             xp_for_next_level: { type: integer }
             streak_days: { type: integer }
+            badges:
+              type: array
+              description: Earned badges (persisted on first threshold-cross, never recomputed)
+              items:
+                type: object
+                properties:
+                  slug: { type: string }
+                  name: { type: string }
+                  earned_at: { type: string, format: date-time, nullable: true }
     Exercise:
       type: object
       properties:

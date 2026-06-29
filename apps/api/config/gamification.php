@@ -18,4 +18,17 @@ return [
         'habit_log' => 10,
     ],
 
+    /*
+    | Badge catalog (FR-ENG-003) — config, not a table. Each badge is earned when the named
+    | gamification `stat` (xp | level | streak_days) reaches `gte`; earning is persisted in
+    | person_badges (a historical award, never recomputed). Extend here, not in code.
+    */
+    'badges' => [
+        ['slug' => 'streak_7', 'name' => '7-Day Streak', 'stat' => 'streak_days', 'gte' => 7],
+        ['slug' => 'streak_30', 'name' => '30-Day Streak', 'stat' => 'streak_days', 'gte' => 30],
+        ['slug' => 'level_5', 'name' => 'Level 5', 'stat' => 'level', 'gte' => 5],
+        ['slug' => 'level_10', 'name' => 'Level 10', 'stat' => 'level', 'gte' => 10],
+        ['slug' => 'xp_1000', 'name' => '1,000 XP', 'stat' => 'xp', 'gte' => 1000],
+    ],
+
 ];
