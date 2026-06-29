@@ -2,6 +2,7 @@
 
 namespace Modules\Analytics\Services;
 
+use App\Support\DayStreak;
 use Modules\Identity\Models\Person;
 use Modules\Nutrition\Models\FoodLog;
 use Modules\Training\Models\Program;
@@ -66,21 +67,8 @@ class AdherenceAnalyzer
         $days = Session::where('person_id', $person->id)
             ->where('started_at', '>=', now()->subDays(self::STREAK_LOOKBACK_DAYS))
             ->get(['started_at'])
-            ->map(fn ($s) => $s->started_at->toDateString())
-            ->unique()->flip();
+            ->map(fn ($s) => $s->started_at->toDateString());
 
-        $cursor = now()->startOfDay();
-        // A not-yet-trained today must not break a streak that ran through yesterday.
-        if (! $days->has($cursor->toDateString()) && $days->has($cursor->copy()->subDay()->toDateString())) {
-            $cursor->subDay();
-        }
-
-        $streak = 0;
-        while ($days->has($cursor->toDateString())) {
-            $streak++;
-            $cursor->subDay();
-        }
-
-        return $streak;
+        return DayStreak::current($days);
     }
 }

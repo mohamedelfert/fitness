@@ -3,6 +3,7 @@
 namespace Modules\Engagement\Http;
 
 use App\Http\Controllers\Controller;
+use App\Support\DayStreak;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -53,30 +54,14 @@ class HabitController extends Controller
         ];
     }
 
-    /**
-     * Consecutive days with a completion, counting back from today, one day of grace — the same
-     * day-based streak as AdherenceAnalyzer (2nd use; extract a shared Streak helper on the 3rd).
-     * ponytail: cadence-aware streaks (weekly target periods) are deferred — this counts days.
-     */
+    /** Consecutive days with a completion (one day of grace) — shared day-streak math. */
     private function currentStreak(Habit $habit): int
     {
         $days = HabitLog::where('habit_id', $habit->id)
             ->where('logged_at', '>=', now()->subDays(180))
             ->get(['logged_at'])
-            ->map(fn ($l) => $l->logged_at->toDateString())
-            ->unique()->flip();
+            ->map(fn ($l) => $l->logged_at->toDateString());
 
-        $cursor = now()->startOfDay();
-        if (! $days->has($cursor->toDateString()) && $days->has($cursor->copy()->subDay()->toDateString())) {
-            $cursor->subDay();
-        }
-
-        $streak = 0;
-        while ($days->has($cursor->toDateString())) {
-            $streak++;
-            $cursor->subDay();
-        }
-
-        return $streak;
+        return DayStreak::current($days);
     }
 }
