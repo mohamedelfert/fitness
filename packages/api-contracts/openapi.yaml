@@ -90,6 +90,39 @@ paths:
         '401': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
 
+  /habits:
+    get:
+      summary: The Person's habits, each with its current streak (FR-ENG-002)
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/HabitList' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+    post:
+      summary: Create a habit (FR-ENG-002)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/HabitCreate' }
+      responses:
+        '201': { description: created, content: { application/json: { schema: { $ref: '#/components/schemas/HabitEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
+  /habit-logs:
+    post:
+      summary: Log a habit completion — append-only, idempotent on client_ulid (FR-ENG-002)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/HabitLogCreate' }
+      responses:
+        '201': { description: created, content: { application/json: { schema: { $ref: '#/components/schemas/HabitLogEnvelope' } } } }
+        '200': { description: idempotent replay, content: { application/json: { schema: { $ref: '#/components/schemas/HabitLogEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
   /exercises:
     get:
       summary: Exercise library (search/filter, localized via Accept-Language) — FR-TRN-001/006
@@ -667,6 +700,46 @@ components:
         target_value: { type: number, nullable: true }
         target_unit: { type: string, maxLength: 16, nullable: true }
         target_date: { type: string, format: date, nullable: true }
+    HabitList:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Habit' } }
+    Habit:
+      type: object
+      properties:
+        id: { $ref: '#/components/schemas/Ulid' }
+        name: { type: string }
+        cadence: { type: string, enum: [daily, weekly] }
+        target_per_period: { type: integer }
+        active: { type: boolean }
+        current_streak: { type: integer, description: consecutive days with a completion (one day of grace) }
+    HabitEnvelope:
+      type: object
+      properties:
+        data: { $ref: '#/components/schemas/Habit' }
+    HabitCreate:
+      type: object
+      required: [name, cadence]
+      properties:
+        name: { type: string, maxLength: 120 }
+        cadence: { type: string, enum: [daily, weekly] }
+        target_per_period: { type: integer, minimum: 1, maximum: 100 }
+    HabitLogCreate:
+      type: object
+      required: [habit_id]
+      properties:
+        habit_id: { $ref: '#/components/schemas/Ulid' }
+        client_ulid: { type: string, nullable: true }
+        logged_at: { type: string, format: date-time, nullable: true }
+    HabitLogEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id: { $ref: '#/components/schemas/Ulid' }
+            habit_id: { $ref: '#/components/schemas/Ulid' }
+            logged_at: { type: string, format: date-time, nullable: true }
     Exercise:
       type: object
       properties:
