@@ -89,9 +89,8 @@ class WeeklyReportTest extends TestCase
         $this->getJson('/v1/me/reports/weekly')->assertOk();
 
         $prompt = $requests[0]->prompt;
-        $this->assertStringContainsString('Adherence', $prompt);
-        $this->assertStringContainsString('Progress', $prompt);
-        $this->assertStringContainsString('weight', $prompt); // the metric the person actually logged
+        $this->assertStringContainsString('weight', $prompt);        // progress: the metric they logged
+        $this->assertStringContainsString('"sessions": 1', $prompt); // adherence: the 1 session they logged
     }
 
     public function test_second_request_same_week_is_cached_and_not_recharged(): void
