@@ -484,6 +484,14 @@ paths:
         '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/ProgressEnvelope' } } } }
         '401': { $ref: '#/components/responses/Problem' }
 
+  /me/adherence:
+    get:
+      summary: Adherence analytics (FR-AN-002)
+      description: Training + nutrition-logging activity over a 28d window plus adherence_pct vs the active program's planned cadence (null when no active program).
+      responses:
+        '200': { description: ok, content: { application/json: { schema: { $ref: '#/components/schemas/AdherenceEnvelope' } } } }
+        '401': { $ref: '#/components/responses/Problem' }
+
   /meal-plans:
     get:
       summary: The Person's meal plans (FR-AI-002)
@@ -1026,6 +1034,21 @@ components:
                       trend_per_week: { type: number, nullable: true }
                       projected_date: { type: string, format: date, nullable: true }
                       on_track: { type: boolean, nullable: true }
+    AdherenceEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            window_days: { type: integer }
+            sessions: { type: integer }
+            active_days: { type: integer }
+            sessions_per_week: { type: number }
+            nutrition_logged_days: { type: integer }
+            current_streak_days: { type: integer }
+            program_id: { type: string, nullable: true }
+            planned_per_week: { type: integer, nullable: true }
+            adherence_pct: { type: number, nullable: true }
     MealPlanSummary:
       type: object
       properties:
